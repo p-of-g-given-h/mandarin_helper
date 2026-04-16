@@ -11,3 +11,21 @@
 	color: var(--text-muted);
 	user-select: none;
 }
+
+.cm-editor .mandarin-helper-editor-char {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	line-height: 1;
+	vertical-align: bottom;
+}
+
+.cm-editor .mandarin-helper-editor-char::before {
+	content: attr(data-pinyin);
+	font-size: 0.55em;
+	line-height: 1.1;
+	letter-spacing: 0.02em;
+	color: var(--text-muted);
+	user-select: none;
+	pointer-events: none;
+}

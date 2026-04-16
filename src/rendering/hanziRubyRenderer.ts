@@ -1,8 +1,6 @@
 import { Plugin } from "obsidian";
-import { pinyin } from "pinyin-pro";
+import { containsHanzi, getHanziRuns, getPinyinLabel, getPinyinSyllables } from "../hanzi/annotation";
 
-const HAS_HANZI_PATTERN = /\p{Script=Han}/u;
-const HANZI_RUN_PATTERN = /\p{Script=Han}+/gu;
 const SKIPPED_TAGS = new Set([
 	"CODE",
 	"PRE",
@@ -44,7 +42,7 @@ function collectHanziTextNodes(root: HTMLElement): Text[] {
 
 			const parent = node.parentElement;
 			const text = node.textContent ?? "";
-			if (parent === null || !HAS_HANZI_PATTERN.test(text) || shouldSkipNode(parent)) {
+			if (parent === null || !containsHanzi(text) || shouldSkipNode(parent)) {
 				return view.NodeFilter.FILTER_REJECT;
 			}
 
@@ -82,29 +80,22 @@ function shouldSkipNode(element: HTMLElement): boolean {
 }
 
 function buildAnnotatedFragment(text: string, document: Document): DocumentFragment | null {
-	if (!HAS_HANZI_PATTERN.test(text)) {
+	if (!containsHanzi(text)) {
 		return null;
 	}
 
 	const fragment = document.createDocumentFragment();
 	let lastIndex = 0;
-	HANZI_RUN_PATTERN.lastIndex = 0;
-	let match = HANZI_RUN_PATTERN.exec(text);
-
-	while (match !== null) {
-		const startIndex = match.index;
-		const hanziRun = match[0];
+	for (const hanziRun of getHanziRuns(text)) {
+		const startIndex = hanziRun.startIndex;
 
 		if (startIndex > lastIndex) {
 			fragment.append(text.slice(lastIndex, startIndex));
 		}
 
-		fragment.append(createRubyNode(hanziRun, document));
-		lastIndex = startIndex + hanziRun.length;
-		match = HANZI_RUN_PATTERN.exec(text);
+		fragment.append(createRubyNode(hanziRun.value, document));
+		lastIndex = startIndex + hanziRun.value.length;
 	}
-
-	HANZI_RUN_PATTERN.lastIndex = 0;
 
 	if (lastIndex < text.length) {
 		fragment.append(text.slice(lastIndex));
@@ -117,14 +108,14 @@ function createRubyNode(hanziRun: string, document: Document): HTMLElement {
 	const ruby = document.createElement("ruby");
 	ruby.className = "mandarin-helper-ruby";
 
-	const syllables = pinyin(hanziRun, { type: "array", toneType: "symbol" });
+	const syllables = getPinyinSyllables(hanziRun);
 	const characters = Array.from(hanziRun);
 
-	if (!Array.isArray(syllables) || syllables.length !== characters.length) {
+	if (syllables === null) {
 		ruby.textContent = hanziRun;
 
 		const annotation = document.createElement("rt");
-		annotation.textContent = Array.isArray(syllables) ? syllables.join(" ") : String(syllables);
+		annotation.textContent = getPinyinLabel(hanziRun);
 		ruby.append(annotation);
 
 		return ruby;
@@ -134,7 +125,7 @@ function createRubyNode(hanziRun: string, document: Document): HTMLElement {
 		ruby.append(character);
 
 		const annotation = document.createElement("rt");
-		annotation.textContent = syllables[index];
+		annotation.textContent = syllables[index] ?? "";
 		ruby.append(annotation);
 	}
 
