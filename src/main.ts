@@ -4,6 +4,11 @@ import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecor
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
 import { DEFAULT_SETTINGS, type MandarinHelperDisplayOptions, type MandarinHelperSettings, MandarinHelperSettingTab } from "./settings";
 
+interface LegacyMandarinHelperSettings extends Partial<MandarinHelperSettings> {
+	colorizePinyin?: boolean;
+	colorizeHanzi?: boolean;
+}
+
 export default class MandarinHelperPlugin extends Plugin {
 	settings: MandarinHelperSettings;
 	private readonly editorExtensions: Extension[] = [];
@@ -37,7 +42,7 @@ export default class MandarinHelperPlugin extends Plugin {
 	private syncEditorExtensions(): void {
 		this.editorExtensions.length = 0;
 
-		if (this.settings.displayPinyin || this.settings.colorizeHanzi) {
+		if (this.isPinyinDisplayed() || this.isHanziColorizationEnabled()) {
 			this.editorExtensions.push(createHanziEditorDecorationsExtension(this.getDisplayOptions()));
 		}
 	}
@@ -52,7 +57,19 @@ export default class MandarinHelperPlugin extends Plugin {
 	}
 
 	private async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MandarinHelperSettings>);
+		const rawSettings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as LegacyMandarinHelperSettings);
+		const migratedColorizeByTone =
+			rawSettings.colorizeByTone ?? rawSettings.colorizePinyin ?? rawSettings.colorizeHanzi ?? DEFAULT_SETTINGS.colorizeByTone;
+
+		this.settings = {
+			displayPinyin: rawSettings.displayPinyin ?? DEFAULT_SETTINGS.displayPinyin,
+			colorizeByTone: migratedColorizeByTone,
+			tone1Color: rawSettings.tone1Color ?? DEFAULT_SETTINGS.tone1Color,
+			tone2Color: rawSettings.tone2Color ?? DEFAULT_SETTINGS.tone2Color,
+			tone3Color: rawSettings.tone3Color ?? DEFAULT_SETTINGS.tone3Color,
+			tone4Color: rawSettings.tone4Color ?? DEFAULT_SETTINGS.tone4Color,
+			tone5Color: rawSettings.tone5Color ?? DEFAULT_SETTINGS.tone5Color,
+		};
 	}
 
 	private async saveSettings(): Promise<void> {
@@ -61,10 +78,22 @@ export default class MandarinHelperPlugin extends Plugin {
 
 	private getDisplayOptions(): MandarinHelperDisplayOptions {
 		return {
-			displayPinyin: this.settings.displayPinyin,
-			colorizePinyin: this.settings.displayPinyin && this.settings.colorizePinyin,
-			colorizeHanzi: this.settings.colorizeHanzi,
+			displayPinyin: this.isPinyinDisplayed(),
+			colorizePinyin: this.isToneColorizationEnabled() && this.isPinyinDisplayed(),
+			colorizeHanzi: this.isToneColorizationEnabled(),
 		};
+	}
+
+	private isPinyinDisplayed(): boolean {
+		return this.settings.displayPinyin;
+	}
+
+	private isHanziColorizationEnabled(): boolean {
+		return this.isToneColorizationEnabled();
+	}
+
+	private isToneColorizationEnabled(): boolean {
+		return this.settings.colorizeByTone;
 	}
 
 	private applyToneColors(): void {

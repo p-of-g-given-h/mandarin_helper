@@ -14,3 +14,7 @@ tone 3 (falling-rising): red
 tone 4 (falling): black
 tone 5 (neutral): tan
 Add another checkbox "Colorize Hanzi"
+
+The "Colorize Pinyin" checkbox shall only toggle the colorization of the Pinyin annotation. The colorization of the Hanzi shall be toggled by the "Colorize Hanzi" checkbox.
+
+Ok merge those two settings into a single checkbox "Colorize by tone"

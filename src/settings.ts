@@ -1,4 +1,4 @@
-import { App, ColorComponent, PluginSettingTab, Setting, ToggleComponent } from "obsidian";
+import { App, ColorComponent, PluginSettingTab, Setting } from "obsidian";
 import type MandarinHelperPlugin from "./main";
 
 export interface MandarinHelperDisplayOptions {
@@ -9,8 +9,7 @@ export interface MandarinHelperDisplayOptions {
 
 export interface MandarinHelperSettings {
 	displayPinyin: MandarinHelperDisplayOptions["displayPinyin"];
-	colorizePinyin: MandarinHelperDisplayOptions["colorizePinyin"];
-	colorizeHanzi: MandarinHelperDisplayOptions["colorizeHanzi"];
+	colorizeByTone: boolean;
 	tone1Color: string;
 	tone2Color: string;
 	tone3Color: string;
@@ -20,8 +19,7 @@ export interface MandarinHelperSettings {
 
 export const DEFAULT_SETTINGS: MandarinHelperSettings = {
 	displayPinyin: true,
-	colorizePinyin: true,
-	colorizeHanzi: false,
+	colorizeByTone: true,
 	tone1Color: "#008000",
 	tone2Color: "#0000ff",
 	tone3Color: "#ff0000",
@@ -41,18 +39,11 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		let colorizePinyinToggleComponent: ToggleComponent | null = null;
 		const toneColorComponents: ColorComponent[] = [];
 
 		const updateDisabledStates = (): void => {
-			const isDisplayPinyinEnabled = this.plugin.settings.displayPinyin;
-			const shouldEnableToneColorSettings =
-				(this.plugin.settings.displayPinyin && this.plugin.settings.colorizePinyin) || this.plugin.settings.colorizeHanzi;
-
-			colorizePinyinToggleComponent?.setDisabled(!isDisplayPinyinEnabled);
-
 			for (const component of toneColorComponents) {
-				component.setDisabled(!shouldEnableToneColorSettings);
+				component.setDisabled(!this.plugin.settings.colorizeByTone);
 			}
 		};
 
@@ -69,28 +60,13 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Colorize Pinyin")
-			.setDesc("Color pinyin transliterations based on tone.")
-			.addToggle((toggle) => {
-				colorizePinyinToggleComponent = toggle;
-
-				return toggle
-					.setValue(this.plugin.settings.colorizePinyin)
-					.setDisabled(!this.plugin.settings.displayPinyin)
-					.onChange(async (value) => {
-						await this.plugin.updateSettings({ colorizePinyin: value });
-						updateDisabledStates();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName("Colorize Hanzi")
-			.setDesc("Color Hanzi characters based on tone.")
+			.setName("Colorize by tone")
+			.setDesc("Color pinyin annotations and Hanzi characters based on tone.")
 			.addToggle((toggle) =>
 				toggle
-					.setValue(this.plugin.settings.colorizeHanzi)
+					.setValue(this.plugin.settings.colorizeByTone)
 					.onChange(async (value) => {
-						await this.plugin.updateSettings({ colorizeHanzi: value });
+						await this.plugin.updateSettings({ colorizeByTone: value });
 						updateDisabledStates();
 					}),
 			);
