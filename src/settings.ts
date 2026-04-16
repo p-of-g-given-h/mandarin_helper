@@ -1,6 +1,9 @@
 import { App, ColorComponent, PluginSettingTab, Setting } from "obsidian";
 import type MandarinHelperPlugin from "./main";
 
+export const FONT_INCREASE_OPTIONS = ["0", "20", "40", "60", "90"] as const;
+export type FontIncreasePercent = typeof FONT_INCREASE_OPTIONS[number];
+
 export interface MandarinHelperDisplayOptions {
 	displayPinyin: boolean;
 	colorizePinyin: boolean;
@@ -10,6 +13,7 @@ export interface MandarinHelperDisplayOptions {
 export interface MandarinHelperSettings {
 	displayPinyin: MandarinHelperDisplayOptions["displayPinyin"];
 	colorizeByTone: boolean;
+	fontIncreasePercent: FontIncreasePercent;
 	tone1Color: string;
 	tone2Color: string;
 	tone3Color: string;
@@ -20,6 +24,7 @@ export interface MandarinHelperSettings {
 export const DEFAULT_SETTINGS: MandarinHelperSettings = {
 	displayPinyin: true,
 	colorizeByTone: true,
+	fontIncreasePercent: "40",
 	tone1Color: "#008000",
 	tone2Color: "#0000ff",
 	tone3Color: "#ff0000",
@@ -70,6 +75,23 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 						updateDisabledStates();
 					}),
 			);
+
+		new Setting(containerEl)
+			.setName("Increase font size")
+			.setDesc("Scale Hanzi and pinyin in reading and editing modes.")
+			.addDropdown((dropdown) => {
+				for (const value of FONT_INCREASE_OPTIONS) {
+					dropdown.addOption(value, `${value}%`);
+				}
+
+				return dropdown
+					.setValue(this.plugin.settings.fontIncreasePercent)
+					.onChange(async (value) => {
+						if (isFontIncreasePercent(value)) {
+							await this.plugin.updateSettings({ fontIncreasePercent: value });
+						}
+					});
+			});
 
 		addToneColorSetting({
 			containerEl,
@@ -156,4 +178,8 @@ function addToneColorSetting({
 					await onChange(newValue);
 				});
 		});
+}
+
+function isFontIncreasePercent(value: string): value is FontIncreasePercent {
+	return FONT_INCREASE_OPTIONS.includes(value as FontIncreasePercent);
 }

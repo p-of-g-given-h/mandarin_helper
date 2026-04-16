@@ -1,4 +1,5 @@
 :root {
+	--mandarin-helper-scale-factor: 1.4;
 	--mandarin-helper-tone-1-color: #008000;
 	--mandarin-helper-tone-2-color: #0000ff;
 	--mandarin-helper-tone-3-color: #ff0000;
@@ -7,9 +8,14 @@
 }
 
 .mandarin-helper-ruby {
+	font-size: calc(1em * var(--mandarin-helper-scale-factor));
 	ruby-position: over;
 	ruby-align: center;
 	ruby-merge: separate;
+}
+
+.mandarin-helper-hanzi {
+	font-size: calc(1em * var(--mandarin-helper-scale-factor));
 }
 
 .mandarin-helper-pinyin {
@@ -24,6 +30,7 @@
 	display: inline-flex;
 	flex-direction: column;
 	align-items: center;
+	font-size: calc(1em * var(--mandarin-helper-scale-factor));
 	line-height: 1;
 	vertical-align: bottom;
 }

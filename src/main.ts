@@ -2,7 +2,13 @@ import type { Extension } from "@codemirror/state";
 import { MarkdownView, Plugin } from "obsidian";
 import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecorations";
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
-import { DEFAULT_SETTINGS, type MandarinHelperDisplayOptions, type MandarinHelperSettings, MandarinHelperSettingTab } from "./settings";
+import {
+	DEFAULT_SETTINGS,
+	type FontIncreasePercent,
+	type MandarinHelperDisplayOptions,
+	type MandarinHelperSettings,
+	MandarinHelperSettingTab,
+} from "./settings";
 
 interface LegacyMandarinHelperSettings extends Partial<MandarinHelperSettings> {
 	colorizePinyin?: boolean;
@@ -17,6 +23,7 @@ export default class MandarinHelperPlugin extends Plugin {
 		await this.loadSettings();
 
 		this.applyToneColors();
+		this.applyFontScale();
 		this.syncEditorExtensions();
 		this.registerEditorExtension(this.editorExtensions);
 		this.addSettingTab(new MandarinHelperSettingTab(this.app, this));
@@ -24,6 +31,7 @@ export default class MandarinHelperPlugin extends Plugin {
 	}
 
 	onunload() {
+		this.clearFontScale();
 		this.clearToneColors();
 	}
 
@@ -34,6 +42,7 @@ export default class MandarinHelperPlugin extends Plugin {
 		};
 		await this.saveSettings();
 		this.applyToneColors();
+		this.applyFontScale();
 		this.syncEditorExtensions();
 		this.app.workspace.updateOptions();
 		this.rerenderMarkdownViews();
@@ -64,6 +73,7 @@ export default class MandarinHelperPlugin extends Plugin {
 		this.settings = {
 			displayPinyin: rawSettings.displayPinyin ?? DEFAULT_SETTINGS.displayPinyin,
 			colorizeByTone: migratedColorizeByTone,
+			fontIncreasePercent: this.normalizeFontIncreasePercent(rawSettings.fontIncreasePercent),
 			tone1Color: rawSettings.tone1Color ?? DEFAULT_SETTINGS.tone1Color,
 			tone2Color: rawSettings.tone2Color ?? DEFAULT_SETTINGS.tone2Color,
 			tone3Color: rawSettings.tone3Color ?? DEFAULT_SETTINGS.tone3Color,
@@ -104,11 +114,33 @@ export default class MandarinHelperPlugin extends Plugin {
 		document.documentElement.style.setProperty("--mandarin-helper-tone-5-color", this.settings.tone5Color);
 	}
 
+	private applyFontScale(): void {
+		const scaleFactor = 1 + Number(this.settings.fontIncreasePercent) / 100;
+		document.documentElement.style.setProperty("--mandarin-helper-scale-factor", scaleFactor.toString());
+	}
+
 	private clearToneColors(): void {
 		document.documentElement.style.removeProperty("--mandarin-helper-tone-1-color");
 		document.documentElement.style.removeProperty("--mandarin-helper-tone-2-color");
 		document.documentElement.style.removeProperty("--mandarin-helper-tone-3-color");
 		document.documentElement.style.removeProperty("--mandarin-helper-tone-4-color");
 		document.documentElement.style.removeProperty("--mandarin-helper-tone-5-color");
+	}
+
+	private clearFontScale(): void {
+		document.documentElement.style.removeProperty("--mandarin-helper-scale-factor");
+	}
+
+	private normalizeFontIncreasePercent(value: unknown): FontIncreasePercent {
+		switch (value) {
+			case "0":
+			case "20":
+			case "40":
+			case "60":
+			case "90":
+				return value;
+			default:
+				return DEFAULT_SETTINGS.fontIncreasePercent;
+		}
 	}
 }

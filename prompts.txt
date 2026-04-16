@@ -18,3 +18,5 @@ Add another checkbox "Colorize Hanzi"
 The "Colorize Pinyin" checkbox shall only toggle the colorization of the Pinyin annotation. The colorization of the Hanzi shall be toggled by the "Colorize Hanzi" checkbox.
 
 Ok merge those two settings into a single checkbox "Colorize by tone"
+
+Add another setting called "Increase font size", a listbox with values 0%, 20%, 40%, 60%, 90% and scale up rendered Hanzi and Pinyin by the selected amount. Default shall be 40%
