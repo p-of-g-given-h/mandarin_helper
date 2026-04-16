@@ -2,7 +2,7 @@ import type { Extension } from "@codemirror/state";
 import { MarkdownView, Plugin } from "obsidian";
 import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecorations";
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
-import { DEFAULT_SETTINGS, type MandarinHelperSettings, MandarinHelperSettingTab } from "./settings";
+import { DEFAULT_SETTINGS, type MandarinHelperDisplayOptions, type MandarinHelperSettings, MandarinHelperSettingTab } from "./settings";
 
 export default class MandarinHelperPlugin extends Plugin {
 	settings: MandarinHelperSettings;
@@ -11,15 +11,24 @@ export default class MandarinHelperPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		this.applyToneColors();
 		this.syncEditorExtensions();
 		this.registerEditorExtension(this.editorExtensions);
 		this.addSettingTab(new MandarinHelperSettingTab(this.app, this));
-		registerHanziRubyPostProcessor(this, () => this.settings.displayPinyin);
+		registerHanziRubyPostProcessor(this, () => this.getDisplayOptions());
 	}
 
-	async updateDisplayPinyin(displayPinyin: boolean): Promise<void> {
-		this.settings.displayPinyin = displayPinyin;
+	onunload() {
+		this.clearToneColors();
+	}
+
+	async updateSettings(settingsPatch: Partial<MandarinHelperSettings>): Promise<void> {
+		this.settings = {
+			...this.settings,
+			...settingsPatch,
+		};
 		await this.saveSettings();
+		this.applyToneColors();
 		this.syncEditorExtensions();
 		this.app.workspace.updateOptions();
 		this.rerenderMarkdownViews();
@@ -28,8 +37,8 @@ export default class MandarinHelperPlugin extends Plugin {
 	private syncEditorExtensions(): void {
 		this.editorExtensions.length = 0;
 
-		if (this.settings.displayPinyin) {
-			this.editorExtensions.push(createHanziEditorDecorationsExtension());
+		if (this.settings.displayPinyin || this.settings.colorizeHanzi) {
+			this.editorExtensions.push(createHanziEditorDecorationsExtension(this.getDisplayOptions()));
 		}
 	}
 
@@ -48,5 +57,29 @@ export default class MandarinHelperPlugin extends Plugin {
 
 	private async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
+	}
+
+	private getDisplayOptions(): MandarinHelperDisplayOptions {
+		return {
+			displayPinyin: this.settings.displayPinyin,
+			colorizePinyin: this.settings.displayPinyin && this.settings.colorizePinyin,
+			colorizeHanzi: this.settings.colorizeHanzi,
+		};
+	}
+
+	private applyToneColors(): void {
+		document.documentElement.style.setProperty("--mandarin-helper-tone-1-color", this.settings.tone1Color);
+		document.documentElement.style.setProperty("--mandarin-helper-tone-2-color", this.settings.tone2Color);
+		document.documentElement.style.setProperty("--mandarin-helper-tone-3-color", this.settings.tone3Color);
+		document.documentElement.style.setProperty("--mandarin-helper-tone-4-color", this.settings.tone4Color);
+		document.documentElement.style.setProperty("--mandarin-helper-tone-5-color", this.settings.tone5Color);
+	}
+
+	private clearToneColors(): void {
+		document.documentElement.style.removeProperty("--mandarin-helper-tone-1-color");
+		document.documentElement.style.removeProperty("--mandarin-helper-tone-2-color");
+		document.documentElement.style.removeProperty("--mandarin-helper-tone-3-color");
+		document.documentElement.style.removeProperty("--mandarin-helper-tone-4-color");
+		document.documentElement.style.removeProperty("--mandarin-helper-tone-5-color");
 	}
 }

@@ -1,5 +1,6 @@
 import { Plugin } from "obsidian";
-import { containsHanzi, getHanziRuns, getPinyinLabel, getPinyinSyllables } from "../hanzi/annotation";
+import { containsHanzi, getHanziCharacterAnnotations, getHanziRuns, getPinyinLabel, type ToneNumber } from "../hanzi/annotation";
+import type { MandarinHelperDisplayOptions } from "../settings";
 
 const SKIPPED_TAGS = new Set([
 	"CODE",
@@ -15,16 +16,17 @@ const SKIPPED_TAGS = new Set([
 	"SAMP",
 ]);
 
-export function registerHanziRubyPostProcessor(plugin: Plugin, shouldDisplayPinyin: () => boolean): void {
+export function registerHanziRubyPostProcessor(plugin: Plugin, getDisplayOptions: () => MandarinHelperDisplayOptions): void {
 	plugin.registerMarkdownPostProcessor((element) => {
-		if (!shouldDisplayPinyin()) {
+		const options = getDisplayOptions();
+		if (!options.displayPinyin && !options.colorizeHanzi) {
 			return;
 		}
 
 		const textNodes = collectHanziTextNodes(element);
 
 		for (const textNode of textNodes) {
-			const replacement = buildAnnotatedFragment(textNode.textContent ?? "", element.ownerDocument);
+			const replacement = buildAnnotatedFragment(textNode.textContent ?? "", element.ownerDocument, options);
 			if (replacement !== null) {
 				textNode.replaceWith(replacement);
 			}
@@ -67,7 +69,7 @@ function collectHanziTextNodes(root: HTMLElement): Text[] {
 }
 
 function shouldSkipNode(element: HTMLElement): boolean {
-	if (element.closest(".mandarin-helper-ruby") !== null) {
+	if (element.closest(".mandarin-helper-ruby, .mandarin-helper-hanzi") !== null) {
 		return true;
 	}
 
@@ -83,7 +85,7 @@ function shouldSkipNode(element: HTMLElement): boolean {
 	return false;
 }
 
-function buildAnnotatedFragment(text: string, document: Document): DocumentFragment | null {
+function buildAnnotatedFragment(text: string, document: Document, options: MandarinHelperDisplayOptions): DocumentFragment | null {
 	if (!containsHanzi(text)) {
 		return null;
 	}
@@ -97,7 +99,7 @@ function buildAnnotatedFragment(text: string, document: Document): DocumentFragm
 			fragment.append(text.slice(lastIndex, startIndex));
 		}
 
-		fragment.append(createRubyNode(hanziRun.value, document));
+		fragment.append(createAnnotatedNode(hanziRun.value, document, options));
 		lastIndex = startIndex + hanziRun.value.length;
 	}
 
@@ -108,30 +110,61 @@ function buildAnnotatedFragment(text: string, document: Document): DocumentFragm
 	return fragment;
 }
 
-function createRubyNode(hanziRun: string, document: Document): HTMLElement {
+function createAnnotatedNode(hanziRun: string, document: Document, options: MandarinHelperDisplayOptions): Node {
+	const annotations = getHanziCharacterAnnotations(hanziRun);
+	if (options.displayPinyin) {
+		return createRubyNode(hanziRun, annotations, document, options);
+	}
+
+	if (annotations === null) {
+		return document.createTextNode(hanziRun);
+	}
+
+	const fragment = document.createDocumentFragment();
+	for (const annotation of annotations) {
+		fragment.append(createHanziNode(annotation.character, annotation.tone, document, options.colorizeHanzi));
+	}
+
+	return fragment;
+}
+
+function createRubyNode(
+	hanziRun: string,
+	annotations: ReturnType<typeof getHanziCharacterAnnotations>,
+	document: Document,
+	options: MandarinHelperDisplayOptions,
+): HTMLElement {
 	const ruby = document.createElement("ruby");
 	ruby.className = "mandarin-helper-ruby";
 
-	const syllables = getPinyinSyllables(hanziRun);
-	const characters = Array.from(hanziRun);
-
-	if (syllables === null) {
+	if (annotations === null) {
 		ruby.textContent = hanziRun;
 
 		const annotation = document.createElement("rt");
+		annotation.className = options.colorizePinyin ? "mandarin-helper-pinyin mandarin-helper-colorize-pinyin" : "mandarin-helper-pinyin";
 		annotation.textContent = getPinyinLabel(hanziRun);
 		ruby.append(annotation);
 
 		return ruby;
 	}
 
-	for (const [index, character] of characters.entries()) {
-		ruby.append(character);
+	for (const annotation of annotations) {
+		ruby.append(createHanziNode(annotation.character, annotation.tone, document, options.colorizeHanzi));
 
-		const annotation = document.createElement("rt");
-		annotation.textContent = syllables[index] ?? "";
-		ruby.append(annotation);
+		const rubyText = document.createElement("rt");
+		rubyText.className = options.colorizePinyin ? "mandarin-helper-pinyin mandarin-helper-colorize-pinyin" : "mandarin-helper-pinyin";
+		rubyText.dataset.tone = String(annotation.tone);
+		rubyText.textContent = annotation.syllable;
+		ruby.append(rubyText);
 	}
 
 	return ruby;
+}
+
+function createHanziNode(character: string, tone: ToneNumber, document: Document, shouldColorize: boolean): HTMLElement {
+	const hanzi = document.createElement("span");
+	hanzi.className = shouldColorize ? "mandarin-helper-hanzi mandarin-helper-colorize-hanzi" : "mandarin-helper-hanzi";
+	hanzi.dataset.tone = String(tone);
+	hanzi.textContent = character;
+	return hanzi;
 }

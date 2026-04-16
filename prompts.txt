@@ -6,3 +6,11 @@ Add functionality for modifying the rendering of Hanzi characters:
 Render the annotation also in editing mode.
 
 add a checkbox to the settings of the plugin saying "Display Pinyin" which toggles the rendering of the Pinyin transliteration
+
+Add another checkbox "Colorize Pinyin", which is deactivated when the first checkbox is off. If this is on, render the Pinyin in colors, depending on the tone. Add settings for customizing the colors of the 5 tones with defaults as follows:
+tone 1 (flat): green
+tone 2 (rising): blue
+tone 3 (falling-rising): red
+tone 4 (falling): black
+tone 5 (neutral): tan
+Add another checkbox "Colorize Hanzi"
