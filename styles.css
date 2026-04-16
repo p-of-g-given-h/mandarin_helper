@@ -1,8 +1,13 @@
-/*
+.mandarin-helper-ruby {
+	ruby-position: over;
+	ruby-align: center;
+	ruby-merge: separate;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+.mandarin-helper-ruby rt {
+	font-size: 0.55em;
+	line-height: 1.1;
+	letter-spacing: 0.02em;
+	color: var(--text-muted);
+	user-select: none;
+}

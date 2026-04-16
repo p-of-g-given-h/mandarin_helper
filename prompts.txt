@@ -1,0 +1,4 @@
+Add functionality for modifying the rendering of Hanzi characters:
+- import the library pinyin-pro
+- for each string of subsequent Hanzi characters, obtain their Pinyin transliteration using the pinyin-pro library
+- render the transliteration over the Hanzi characters
