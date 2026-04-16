@@ -20,3 +20,27 @@ The "Colorize Pinyin" checkbox shall only toggle the colorization of the Pinyin 
 Ok merge those two settings into a single checkbox "Colorize by tone"
 
 Add another setting called "Increase font size", a listbox with values 0%, 20%, 40%, 60%, 90% and scale up rendered Hanzi and Pinyin by the selected amount. Default shall be 40%
+
+create a module src/dictionary.ts with a function "normalize" that transforms a string by:
+- removing everything in parentheses or brackets
+- stripping all whitespace
+- turning it into lowercase
+- substituting u: and v and ü by u
+
+To the same file add a function parse_line which takes a string and performs these operations:
+- split the string by slashes into slash_parts
+- take the first slash_part and split it by spaces, take the second of these parts as "hanzi"
+- run the hanzi string through the pinyin function of the pinyin-pro library with option toneType set to 'none', apply the normalize function to the result, and call that result "npinyin"
+- create a list called searchables with npinyin as its first element
+- create an empty list called translations
+- for each remaining slash_part:
+  - append it to the translations list
+  - apply the normalize function and append the result to the searchables list
+- return a tuple consisting of hanzi, searchables, and translations
+
+Add a function called parse which takes a string, splits it into lines, and for each non-empty line that does not start with # apply the parse_line function, and return a list of the results
+
+Add a function called make_dictionary which takes a URL as a string, downloads the file from that URL, runs parse on its content, and stores the result as json in a file called dictionary.json
+
+add a testcase in an appropriate place called test_parse which runs make_dictionary on the URL https://github.com/gugray/HanDeDict/blob/master/handedict.u8 and run it
+
