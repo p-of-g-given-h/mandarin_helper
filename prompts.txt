@@ -4,3 +4,5 @@ Add functionality for modifying the rendering of Hanzi characters:
 - render the transliteration over the Hanzi characters
 
 Render the annotation also in editing mode.
+
+add a checkbox to the settings of the plugin saying "Display Pinyin" which toggles the rendering of the Pinyin transliteration

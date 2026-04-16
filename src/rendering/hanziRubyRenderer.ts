@@ -15,8 +15,12 @@ const SKIPPED_TAGS = new Set([
 	"SAMP",
 ]);
 
-export function registerHanziRubyPostProcessor(plugin: Plugin): void {
+export function registerHanziRubyPostProcessor(plugin: Plugin, shouldDisplayPinyin: () => boolean): void {
 	plugin.registerMarkdownPostProcessor((element) => {
+		if (!shouldDisplayPinyin()) {
+			return;
+		}
+
 		const textNodes = collectHanziTextNodes(element);
 
 		for (const textNode of textNodes) {

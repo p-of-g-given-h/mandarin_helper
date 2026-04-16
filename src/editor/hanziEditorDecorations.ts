@@ -1,6 +1,5 @@
 import { RangeSetBuilder, type Extension } from "@codemirror/state";
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
-import type { Plugin } from "obsidian";
 import { containsHanzi, getHanziRuns, getPinyinSyllables } from "../hanzi/annotation";
 
 const hanziCharacterDecoration = (syllable: string) =>
@@ -27,8 +26,8 @@ const hanziEditorAnnotationExtension = ViewPlugin.fromClass(class {
 	decorations: (plugin) => plugin.decorations,
 });
 
-export function registerHanziEditorDecorations(plugin: Plugin): void {
-	plugin.registerEditorExtension(hanziEditorAnnotationExtension as Extension);
+export function createHanziEditorDecorationsExtension(): Extension {
+	return hanziEditorAnnotationExtension;
 }
 
 function buildEditorDecorations(view: EditorView): DecorationSet {
