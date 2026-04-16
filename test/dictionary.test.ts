@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile, rm } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-import { make_dictionary } from "../src/dictionary.ts";
+import { findDictionaryMatches, make_dictionary } from "../src/dictionary.ts";
 
 const HANDEDICT_URL = "https://github.com/gugray/HanDeDict/blob/master/handedict.u8";
 
@@ -22,6 +22,21 @@ export async function test_parse(): Promise<void> {
 	assert.equal(dictionaryFile.length, parsed.length);
 }
 
+export function test_find_dictionary_matches(): void {
+	const entries = [
+		["你好", ["nihao", "hello"], ["hello"]],
+		["你", ["ni"], ["you"]],
+		["再见", ["zaijian", "goodbye"], ["goodbye"]],
+	];
+
+	const hanziMatches = findDictionaryMatches(entries, "你");
+	assert.deepEqual(hanziMatches.map((entry) => entry[0]), ["你", "你好"]);
+
+	const searchableMatches = findDictionaryMatches(entries, "HEL");
+	assert.deepEqual(searchableMatches.map((entry) => entry[0]), ["你好"]);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+	test_find_dictionary_matches();
 	await test_parse();
 }

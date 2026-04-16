@@ -1,5 +1,7 @@
 import type { Extension } from "@codemirror/state";
-import { MarkdownView, Plugin } from "obsidian";
+import { MarkdownView, Notice, Plugin, normalizePath } from "obsidian";
+import { registerDictionaryLookupCommand } from "./commands/dictionaryLookupCommand";
+import { make_dictionary, type DictionaryEntry } from "./dictionary";
 import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecorations";
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
 import {
@@ -17,15 +19,18 @@ interface LegacyMandarinHelperSettings extends Partial<MandarinHelperSettings> {
 
 export default class MandarinHelperPlugin extends Plugin {
 	settings: MandarinHelperSettings;
+	dictionary: DictionaryEntry[] = [];
 	private readonly editorExtensions: Extension[] = [];
 
 	async onload() {
 		await this.loadSettings();
+		await this.loadDictionary();
 
 		this.applyToneColors();
 		this.applyFontScale();
 		this.syncEditorExtensions();
 		this.registerEditorExtension(this.editorExtensions);
+		registerDictionaryLookupCommand(this);
 		this.addSettingTab(new MandarinHelperSettingTab(this.app, this));
 		registerHanziRubyPostProcessor(this, () => this.getDisplayOptions());
 	}
@@ -73,6 +78,7 @@ export default class MandarinHelperPlugin extends Plugin {
 		this.settings = {
 			displayPinyin: rawSettings.displayPinyin ?? DEFAULT_SETTINGS.displayPinyin,
 			colorizeByTone: migratedColorizeByTone,
+			dictionarySource: rawSettings.dictionarySource ?? DEFAULT_SETTINGS.dictionarySource,
 			fontIncreasePercent: this.normalizeFontIncreasePercent(rawSettings.fontIncreasePercent),
 			tone1Color: rawSettings.tone1Color ?? DEFAULT_SETTINGS.tone1Color,
 			tone2Color: rawSettings.tone2Color ?? DEFAULT_SETTINGS.tone2Color,
@@ -84,6 +90,45 @@ export default class MandarinHelperPlugin extends Plugin {
 
 	private async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
+	}
+
+	private async loadDictionary(): Promise<void> {
+		const dictionaryPath = this.getDictionaryPath();
+
+		if (!await this.app.vault.adapter.exists(dictionaryPath)) {
+			this.dictionary = [];
+			return;
+		}
+
+		try {
+			this.dictionary = JSON.parse(await this.app.vault.adapter.read(dictionaryPath)) as DictionaryEntry[];
+		} catch (error) {
+			this.dictionary = [];
+			console.error("Mandarin Helper: failed to load dictionary.json", error);
+		}
+	}
+
+	async downloadDictionary(url: string): Promise<void> {
+		const trimmedUrl = url.trim();
+
+		if (trimmedUrl.length === 0) {
+			new Notice("Dictionary source is empty.");
+			return;
+		}
+
+		try {
+			await make_dictionary(trimmedUrl, {
+				writeJson: async (json) => {
+					await this.ensureDictionaryFolderExists();
+					await this.app.vault.adapter.write(this.getDictionaryPath(), json);
+				},
+			});
+			await this.loadDictionary();
+			new Notice(`Dictionary downloaded (${this.dictionary.length} entries).`);
+		} catch (error) {
+			console.error("Mandarin Helper: failed to download dictionary", error);
+			new Notice(error instanceof Error ? error.message : "Failed to download dictionary.");
+		}
 	}
 
 	private getDisplayOptions(): MandarinHelperDisplayOptions {
@@ -141,6 +186,22 @@ export default class MandarinHelperPlugin extends Plugin {
 				return value;
 			default:
 				return DEFAULT_SETTINGS.fontIncreasePercent;
+		}
+	}
+
+	private getDictionaryPath(): string {
+		return normalizePath(`${this.getDictionaryFolderPath()}/dictionary.json`);
+	}
+
+	private getDictionaryFolderPath(): string {
+		return normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}/data`);
+	}
+
+	private async ensureDictionaryFolderExists(): Promise<void> {
+		const dictionaryFolderPath = this.getDictionaryFolderPath();
+
+		if (!await this.app.vault.adapter.exists(dictionaryFolderPath)) {
+			await this.app.vault.adapter.mkdir(dictionaryFolderPath);
 		}
 	}
 }

@@ -44,3 +44,23 @@ Add a function called make_dictionary which takes a URL as a string, downloads t
 
 add a testcase in an appropriate place called test_parse which runs make_dictionary on the URL https://github.com/gugray/HanDeDict/blob/master/handedict.u8 and run it
 
+Modify parse_line so that it ignores empty slash_parts and run the testcase again
+
+at plugin startup, if dictionary.json is present, load it into memory
+
+add a configurable keyboard shortcut called "Dictionary Lookup", defaulting to CTRL+SHIFT+D.
+It shall take the currently selected text and match it against each searchable string plus the hanzi of each dictionary element. Sort all elements where at least one searchable or the hanzi contains the selected text by the length of the matching searchable or hanzi in increasing order. Open a popup menu with a scrollable list of the sorted matching dictionary elements.
+Format each element in one row of the popup, with segments for hanyi and each translation.
+
+When running npm run dev, I get this error: The package "node:fs/promises" wasn't found on the file system but is built into node. Are you
+  trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this
+  error.
+
+Still same error
+
+In the settings page, add a text field "Dictionary Source" pre-filled with the URL https://github.com/gugray/HanDeDict/blob/master/handedict.u8 and a Download button which when clicked runs make_dictionary on the provided URL, and then loads the generated dictionary.json file
+
+When make_dictionary fails, give a more informative error message
+
+It seems to fail when trying to write dictionary.json. Choose an appropriate path that is suitable for plugins to write to
+

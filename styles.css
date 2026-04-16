@@ -94,3 +94,54 @@
 .cm-editor .mandarin-helper-editor-char.mandarin-helper-colorize-hanzi[data-tone="5"] {
 	color: var(--mandarin-helper-tone-5-color);
 }
+
+.modal.mandarin-helper-dictionary-modal {
+	width: min(760px, calc(100vw - 3rem));
+}
+
+.mandarin-helper-dictionary-summary {
+	margin-bottom: 0.75rem;
+	color: var(--text-muted);
+}
+
+.mandarin-helper-dictionary-results {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	max-height: min(60vh, 32rem);
+	overflow-y: auto;
+	padding-right: 0.25rem;
+}
+
+.mandarin-helper-dictionary-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mandarin-helper-dictionary-segment {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2rem;
+	padding: 0.3rem 0.6rem;
+	border-radius: 999px;
+	background: var(--background-secondary);
+}
+
+.mandarin-helper-dictionary-hanzi-segment {
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: var(--text-accent);
+	background: color-mix(in srgb, var(--interactive-accent) 16%, var(--background-secondary));
+}
+
+.mandarin-helper-dictionary-translation-segment {
+	color: var(--text-normal);
+}
+
+.mandarin-helper-dictionary-empty {
+	padding: 1rem 0;
+	color: var(--text-muted);
+}

@@ -1,7 +1,13 @@
-import { writeFile } from "node:fs/promises";
 import { pinyin } from "pinyin-pro";
 
 export type DictionaryEntry = [string, string[], string[]];
+export interface DictionaryMatch {
+	entry: DictionaryEntry;
+	matchLength: number;
+}
+export interface MakeDictionaryOptions {
+	writeJson?: (json: string) => Promise<void>;
+}
 
 export function normalize(value: string): string {
 	let normalized = "";
@@ -41,7 +47,7 @@ export function normalize(value: string): string {
 }
 
 export function parse_line(value: string): DictionaryEntry {
-	const slashParts = value.split("/");
+	const slashParts = value.split("/").filter((slashPart) => slashPart.length > 0);
 	const [firstSlashPart = ""] = slashParts;
 	const [, hanzi = ""] = firstSlashPart.trim().split(/\s+/u);
 	const npinyin = normalize(pinyin(hanzi, { toneType: "none" }));
@@ -63,16 +69,87 @@ export function parse(value: string): DictionaryEntry[] {
 		.map((line) => parse_line(line));
 }
 
-export async function make_dictionary(url: string): Promise<DictionaryEntry[]> {
-	const response = await fetch(resolveDictionaryUrl(url));
+export async function make_dictionary(url: string, options?: MakeDictionaryOptions): Promise<DictionaryEntry[]> {
+	const resolvedUrl = resolveDictionaryUrl(url);
+	let response: Response;
 
-	if (!response.ok) {
-		throw new Error(`Failed to download dictionary: ${response.status} ${response.statusText}`);
+	try {
+		response = await fetch(resolvedUrl);
+	} catch (error) {
+		throw new Error(
+			`Failed to download dictionary from ${resolvedUrl}: ${getErrorMessage(error)}`,
+		);
 	}
 
-	const parsed = parse(await response.text());
-	await writeFile("dictionary.json", JSON.stringify(parsed, null, "\t"), "utf8");
+	if (!response.ok) {
+		throw new Error(
+			`Failed to download dictionary from ${resolvedUrl}: ${response.status} ${response.statusText}`,
+		);
+	}
+
+	let sourceText: string;
+
+	try {
+		sourceText = await response.text();
+	} catch (error) {
+		throw new Error(
+			`Failed to read dictionary response from ${resolvedUrl}: ${getErrorMessage(error)}`,
+		);
+	}
+
+	let parsed: DictionaryEntry[];
+
+	try {
+		parsed = parse(sourceText);
+	} catch (error) {
+		throw new Error(
+			`Failed to parse dictionary content from ${resolvedUrl}: ${getErrorMessage(error)}`,
+		);
+	}
+
+	const json = JSON.stringify(parsed, null, "\t");
+
+	if (options?.writeJson) {
+		try {
+			await options.writeJson(json);
+		} catch (error) {
+			throw new Error(
+				`Failed to write generated dictionary JSON for ${resolvedUrl}: ${getErrorMessage(error)}`,
+			);
+		}
+		return parsed;
+	}
+
+	const nodeFsPromisesModule = "node:fs/promises";
+	const { writeFile } = await import(nodeFsPromisesModule);
+
+	try {
+		await writeFile("dictionary.json", json, "utf8");
+	} catch (error) {
+		throw new Error(
+			`Failed to write dictionary.json for ${resolvedUrl}: ${getErrorMessage(error)}`,
+		);
+	}
+
 	return parsed;
+}
+
+export function findDictionaryMatches(entries: DictionaryEntry[], query: string): DictionaryEntry[] {
+	const rawQuery = query.trim();
+	const normalizedQuery = normalize(rawQuery);
+
+	if (rawQuery.length === 0) {
+		return [];
+	}
+
+	return entries
+		.map((entry) => {
+			const matchLength = getDictionaryMatchLength(entry, rawQuery, normalizedQuery);
+			return matchLength === null ? null : { entry, matchLength };
+		})
+		.filter((match): match is DictionaryMatch => match !== null)
+		.sort((left, right) => left.matchLength - right.matchLength)
+		.map((match) => match.entry);
 }
 
 function resolveDictionaryUrl(url: string): string {
@@ -95,4 +172,34 @@ function resolveDictionaryUrl(url: string): string {
 	}
 
 	return url;
+}
+
+function getDictionaryMatchLength(
+	[hanzi, searchables]: DictionaryEntry,
+	rawQuery: string,
+	normalizedQuery: string,
+): number | null {
+	const candidateLengths: number[] = [];
+
+	if (hanzi.includes(rawQuery)) {
+		candidateLengths.push(hanzi.length);
+	}
+
+	if (normalizedQuery.length > 0) {
+		for (const searchable of searchables) {
+			if (searchable.includes(normalizedQuery)) {
+				candidateLengths.push(searchable.length);
+			}
+		}
+	}
+
+	if (candidateLengths.length === 0) {
+		return null;
+	}
+
+	return Math.min(...candidateLengths);
+}
+
+function getErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
 }

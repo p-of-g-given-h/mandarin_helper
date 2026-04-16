@@ -13,6 +13,7 @@ export interface MandarinHelperDisplayOptions {
 export interface MandarinHelperSettings {
 	displayPinyin: MandarinHelperDisplayOptions["displayPinyin"];
 	colorizeByTone: boolean;
+	dictionarySource: string;
 	fontIncreasePercent: FontIncreasePercent;
 	tone1Color: string;
 	tone2Color: string;
@@ -24,6 +25,7 @@ export interface MandarinHelperSettings {
 export const DEFAULT_SETTINGS: MandarinHelperSettings = {
 	displayPinyin: true,
 	colorizeByTone: true,
+	dictionarySource: "https://github.com/gugray/HanDeDict/blob/master/handedict.u8",
 	fontIncreasePercent: "40",
 	tone1Color: "#008000",
 	tone2Color: "#0000ff",
@@ -73,6 +75,37 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						await this.plugin.updateSettings({ colorizeByTone: value });
 						updateDisabledStates();
+					}),
+			);
+
+		let dictionarySourceValue = this.plugin.settings.dictionarySource;
+
+		new Setting(containerEl)
+			.setName("Dictionary source")
+			.setDesc("Download dictionary entries from a source file into this plugin.")
+			.addText((text) =>
+				text
+					.setPlaceholder(DEFAULT_SETTINGS.dictionarySource)
+					.setValue(dictionarySourceValue)
+					.onChange(async (value) => {
+						dictionarySourceValue = value;
+						await this.plugin.updateSettings({ dictionarySource: value });
+					}),
+			)
+			.addButton((button) =>
+				button
+					.setButtonText("Download")
+					.onClick(async () => {
+						button.setDisabled(true);
+						button.setButtonText("Downloading...");
+
+						try {
+							await this.plugin.updateSettings({ dictionarySource: dictionarySourceValue });
+							await this.plugin.downloadDictionary(dictionarySourceValue);
+						} finally {
+							button.setDisabled(false);
+							button.setButtonText("Download");
+						}
 					}),
 			);
 
