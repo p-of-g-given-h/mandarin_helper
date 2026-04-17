@@ -74,3 +74,5 @@ Add a button in the sidebar with the icon "book-a" for dictionary lookup.
 
 When dictionary lookup gets triggered and no text is selected, use the text in the current line instead, stripped of markdown like # and - and [] and so on.
 
+re-write README.md to be a project readme on github
+
