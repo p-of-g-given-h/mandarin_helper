@@ -109,3 +109,5 @@ remove the horizontal line between "Dictionary presets" and "Dictionary source"
 
 Make the URL field wider
 
+adjust the licence file
+
