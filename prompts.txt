@@ -64,3 +64,7 @@ When make_dictionary fails, give a more informative error message
 
 It seems to fail when trying to write dictionary.json. Choose an appropriate path that is suitable for plugins to write to
 
+make the layout of the popup more compact vertically: decrease the spacing before and afte the horizontal lines. Rendering the hanzi in the popup shall respect the set options for coloring. Show the pinyin transliteration (colored if so configured) in a new segment between hanzi and the translations.
+
+Do not show hanzi in bold face. Don't show the number of matches.
+

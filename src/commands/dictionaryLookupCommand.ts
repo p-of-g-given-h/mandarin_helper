@@ -1,6 +1,7 @@
 import { MarkdownView, Notice } from "obsidian";
 import { findDictionaryMatches } from "../dictionary";
 import type MandarinHelperPlugin from "../main";
+import type { MandarinHelperDisplayOptions } from "../settings";
 import { DictionaryLookupModal } from "../ui/dictionaryLookupModal";
 
 export function registerDictionaryLookupCommand(plugin: MandarinHelperPlugin): void {
@@ -36,7 +37,12 @@ function openDictionaryLookup(plugin: MandarinHelperPlugin, selection: string): 
 	}
 
 	const matches = findDictionaryMatches(plugin.dictionary, selection);
-	new DictionaryLookupModal(plugin.app, selection, matches).open();
+	const displayOptions: MandarinHelperDisplayOptions = {
+		displayPinyin: true,
+		colorizePinyin: plugin.settings.colorizeByTone,
+		colorizeHanzi: plugin.settings.colorizeByTone,
+	};
+	new DictionaryLookupModal(plugin.app, selection, matches, displayOptions).open();
 }
 
 function getSelectedText(plugin: MandarinHelperPlugin): string {
