@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { findDictionaryMatches, make_dictionary } from "../src/dictionary.ts";
 
@@ -8,7 +8,11 @@ const HANDEDICT_URL = "https://github.com/gugray/HanDeDict/blob/master/handedict
 export async function test_parse(): Promise<void> {
 	await rm("dictionary.json", { force: true });
 
-	const parsed = await make_dictionary(HANDEDICT_URL);
+	const parsed = await make_dictionary(HANDEDICT_URL, {
+		writeJson: async (json) => {
+			await writeFile("dictionary.json", json, "utf8");
+		},
+	});
 	const [hanzi, searchables, translations] = parsed[0] ?? [];
 
 	assert.ok(parsed.length > 1000);

@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import { pinyin } from "pinyin-pro";
 
 export type DictionaryEntry = [string, string[], string[]];
@@ -71,29 +72,18 @@ export function parse(value: string): DictionaryEntry[] {
 
 export async function make_dictionary(url: string, options?: MakeDictionaryOptions): Promise<DictionaryEntry[]> {
 	const resolvedUrl = resolveDictionaryUrl(url);
-	let response: Response;
-
-	try {
-		response = await fetch(resolvedUrl);
-	} catch (error) {
-		throw new Error(
-			`Failed to download dictionary from ${resolvedUrl}: ${getErrorMessage(error)}`,
-		);
-	}
-
-	if (!response.ok) {
-		throw new Error(
-			`Failed to download dictionary from ${resolvedUrl}: ${response.status} ${response.statusText}`,
-		);
-	}
-
 	let sourceText: string;
 
 	try {
-		sourceText = await response.text();
+		const response = await requestUrl(resolvedUrl);
+		if (response.status >= 400) {
+			throw new Error(`HTTP ${response.status}`);
+		}
+
+		sourceText = response.text;
 	} catch (error) {
 		throw new Error(
-			`Failed to read dictionary response from ${resolvedUrl}: ${getErrorMessage(error)}`,
+			`Failed to download dictionary from ${resolvedUrl}: ${getErrorMessage(error)}`,
 		);
 	}
 
@@ -118,17 +108,6 @@ export async function make_dictionary(url: string, options?: MakeDictionaryOptio
 			);
 		}
 		return parsed;
-	}
-
-	const nodeFsPromisesModule = "node:fs/promises";
-	const { writeFile } = await import(nodeFsPromisesModule);
-
-	try {
-		await writeFile("dictionary.json", json, "utf8");
-	} catch (error) {
-		throw new Error(
-			`Failed to write dictionary.json for ${resolvedUrl}: ${getErrorMessage(error)}`,
-		);
 	}
 
 	return parsed;

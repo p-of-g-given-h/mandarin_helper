@@ -76,3 +76,5 @@ When dictionary lookup gets triggered and no text is selected, use the text in t
 
 re-write README.md to be a project readme on github
 
+Run the linter and fix all issues.
+

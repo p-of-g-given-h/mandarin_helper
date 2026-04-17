@@ -55,8 +55,8 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 		};
 
 		new Setting(containerEl)
-			.setName("Display Pinyin")
-			.setDesc("Render pinyin transliterations above Hanzi characters in reading and editing modes.")
+			.setName("Display pinyin")
+			.setDesc("Render pinyin transliterations above hanzi characters in reading and editing modes.")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.displayPinyin)
@@ -68,7 +68,7 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Colorize by tone")
-			.setDesc("Color pinyin annotations and Hanzi characters based on tone.")
+			.setDesc("Color pinyin annotations and hanzi characters based on tone.")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.colorizeByTone)
@@ -111,7 +111,7 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Increase font size")
-			.setDesc("Scale Hanzi and pinyin in reading and editing modes.")
+			.setDesc("Scale hanzi and pinyin in reading and editing modes.")
 			.addDropdown((dropdown) => {
 				for (const value of FONT_INCREASE_OPTIONS) {
 					dropdown.addOption(value, `${value}%`);

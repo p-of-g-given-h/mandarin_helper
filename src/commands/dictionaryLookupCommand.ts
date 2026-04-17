@@ -7,13 +7,7 @@ import { DictionaryLookupModal } from "../ui/dictionaryLookupModal";
 export function registerDictionaryLookupCommand(plugin: MandarinHelperPlugin): void {
 	plugin.addCommand({
 		id: "dictionary-lookup",
-		name: "Dictionary Lookup",
-		hotkeys: [
-			{
-				modifiers: ["Ctrl", "Shift"],
-				key: "D",
-			},
-		],
+		name: "Dictionary lookup",
 		checkCallback: (checking) => {
 			const selection = getLookupText(plugin);
 
@@ -99,7 +93,7 @@ function stripMarkdownForLookup(value: string): string {
 		.replace(/^\s{0,3}(?:[-*+]|\d+\.)\s+/gu, "")
 		.replace(/^\s{0,3}#{1,6}\s+/gu, "")
 		.replace(/[`*_~>#]/gu, "")
-		.replace(/[\[\]()!]/gu, "")
+		.replace(/[[\]()!]/gu, "")
 		.replace(/\s+/gu, " ")
 		.trim();
 }

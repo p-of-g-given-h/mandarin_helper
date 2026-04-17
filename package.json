@@ -25,6 +25,8 @@
 		"jiti": "2.6.1"
 	},
 	"dependencies": {
+		"@codemirror/state": "^6.5.0",
+		"@codemirror/view": "^6.38.6",
 		"obsidian": "latest",
 		"pinyin-pro": "^3.27.0"
 	}

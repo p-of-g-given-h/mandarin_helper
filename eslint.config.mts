@@ -13,7 +13,8 @@ export default tseslint.config(
 				projectService: {
 					allowDefaultProject: [
 						'eslint.config.js',
-						'manifest.json'
+						'manifest.json',
+						'test/dictionary.test.ts'
 					]
 				},
 				tsconfigRootDir: import.meta.dirname,
@@ -22,6 +23,17 @@ export default tseslint.config(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		files: ["test/**/*.ts"],
+		languageOptions: {
+			globals: {
+				...globals.node,
+			},
+		},
+		rules: {
+			"import/no-nodejs-modules": "off",
+		},
+	},
 	globalIgnores([
 		"node_modules",
 		"dist",
