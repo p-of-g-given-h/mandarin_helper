@@ -108,6 +108,12 @@
 	padding-right: 0.25rem;
 }
 
+.mandarin-helper-dictionary-copy-note {
+	margin-bottom: 0.35rem;
+	font-size: 0.8rem;
+	color: var(--text-muted);
+}
+
 .mandarin-helper-dictionary-row {
 	display: flex;
 	flex-wrap: wrap;
@@ -123,6 +129,21 @@
 	padding: 0.2rem 0.5rem;
 	border-radius: 999px;
 	background: var(--background-secondary);
+}
+
+.mandarin-helper-dictionary-segment-clickable {
+	cursor: pointer;
+	transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.mandarin-helper-dictionary-segment-clickable:hover,
+.mandarin-helper-dictionary-segment-clickable:focus-visible {
+	background: var(--background-modifier-hover);
+	outline: none;
+}
+
+.mandarin-helper-dictionary-segment-clickable:active {
+	transform: translateY(1px);
 }
 
 .mandarin-helper-dictionary-hanzi-segment {

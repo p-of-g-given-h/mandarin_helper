@@ -68,3 +68,5 @@ make the layout of the popup more compact vertically: decrease the spacing befor
 
 Do not show hanzi in bold face. Don't show the number of matches.
 
+Make all segments in the popup clickable. When clicked, copy its contents to the clipboard, close the popup, and display feedback what has been copied. In the header of the popup, add a small note "Click to copy to clipboard"
+
