@@ -2,9 +2,12 @@ import { requestUrl } from "obsidian";
 import { pinyin } from "pinyin-pro";
 
 export type DictionaryEntry = [string, string[], string[]];
+export type RankingDictionary = Record<string, number>;
 export interface DictionaryMatch {
 	entry: DictionaryEntry;
-	matchLength: number;
+	ranking: number;
+	hanziLength: number;
+	secondaryLength: number;
 }
 export interface MakeDictionaryOptions {
 	writeJson?: (json: string) => Promise<void>;
@@ -57,7 +60,7 @@ export function parse_line(value: string): DictionaryEntry {
 
 	for (const slashPart of slashParts.slice(1)) {
 		translations.push(slashPart);
-		searchables.push(normalize(slashPart));
+		searchables.push(normalize(stripSearchableExampleSuffix(slashPart)));
 	}
 
 	return [hanzi, searchables, translations];
@@ -113,7 +116,11 @@ export async function make_dictionary(url: string, options?: MakeDictionaryOptio
 	return parsed;
 }
 
-export function findDictionaryMatches(entries: DictionaryEntry[], query: string): DictionaryEntry[] {
+export function findDictionaryMatches(
+	entries: DictionaryEntry[],
+	query: string,
+	rankingDictionary: RankingDictionary = {},
+): DictionaryEntry[] {
 	const rawQuery = query.trim();
 	const normalizedQuery = normalize(rawQuery);
 
@@ -123,11 +130,15 @@ export function findDictionaryMatches(entries: DictionaryEntry[], query: string)
 
 	return entries
 		.map((entry) => {
-			const matchLength = getDictionaryMatchLength(entry, rawQuery, normalizedQuery);
-			return matchLength === null ? null : { entry, matchLength };
+			const sortKey = getDictionaryMatchSortKey(entry, rawQuery, normalizedQuery, rankingDictionary);
+			return sortKey === null ? null : { entry, ...sortKey };
 		})
 		.filter((match): match is DictionaryMatch => match !== null)
-		.sort((left, right) => left.matchLength - right.matchLength)
+		.sort((left, right) =>
+			left.ranking - right.ranking
+			|| left.hanziLength - right.hanziLength
+			|| left.secondaryLength - right.secondaryLength,
+		)
 		.map((match) => match.entry);
 }
 
@@ -153,32 +164,42 @@ function resolveDictionaryUrl(url: string): string {
 	return url;
 }
 
-function getDictionaryMatchLength(
+function getDictionaryMatchSortKey(
 	[hanzi, searchables]: DictionaryEntry,
 	rawQuery: string,
 	normalizedQuery: string,
-): number | null {
-	const candidateLengths: number[] = [];
+	rankingDictionary: RankingDictionary,
+): Omit<DictionaryMatch, "entry"> | null {
+	const matchingSearchableLengths: number[] = [];
 
-	if (hanzi.includes(rawQuery)) {
-		candidateLengths.push(hanzi.length);
-	}
+	const matchesHanzi = hanzi.includes(rawQuery);
 
 	if (normalizedQuery.length > 0) {
 		for (const searchable of searchables) {
 			if (searchable.includes(normalizedQuery)) {
-				candidateLengths.push(searchable.length);
+				matchingSearchableLengths.push(searchable.length);
 			}
 		}
 	}
 
-	if (candidateLengths.length === 0) {
+	if (!matchesHanzi && matchingSearchableLengths.length === 0) {
 		return null;
 	}
 
-	return Math.min(...candidateLengths);
+	return {
+		ranking: rankingDictionary[hanzi] ?? 1000000,
+		hanziLength: hanzi.length,
+		secondaryLength: matchesHanzi
+			? Math.min(...searchables.map((searchable) => searchable.length))
+			: Math.min(...matchingSearchableLengths),
+	};
 }
 
 function getErrorMessage(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
+}
+
+function stripSearchableExampleSuffix(value: string): string {
+	const exampleIndex = value.indexOf("; Bsp.:");
+	return exampleIndex === -1 ? value : value.slice(0, exampleIndex);
 }

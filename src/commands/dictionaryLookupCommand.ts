@@ -41,13 +41,13 @@ function openDictionaryLookup(plugin: MandarinHelperPlugin, selection: string): 
 		return;
 	}
 
-	const matches = findDictionaryMatches(plugin.dictionary, selection);
+	const matches = findDictionaryMatches(plugin.dictionary, selection, plugin.ranking);
 	const displayOptions: MandarinHelperDisplayOptions = {
 		displayPinyin: true,
 		colorizePinyin: plugin.settings.colorizeByTone,
 		colorizeHanzi: plugin.settings.colorizeByTone,
 	};
-	new DictionaryLookupModal(plugin.app, selection, matches, displayOptions).open();
+	new DictionaryLookupModal(plugin.app, selection, matches, plugin.ranking, displayOptions).open();
 }
 
 function getSelectedText(plugin: MandarinHelperPlugin): string {

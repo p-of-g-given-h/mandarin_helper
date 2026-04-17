@@ -1,5 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
+import { createJiti } from "jiti";
 import { builtinModules } from 'node:module';
 
 const banner =
@@ -10,6 +11,10 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+const jiti = createJiti(import.meta.url);
+const { COMPLETE_WORDLIST_URL, make_ranking } = await jiti.import("./src/wordlist.ts");
+
+await make_ranking(COMPLETE_WORDLIST_URL);
 
 const context = await esbuild.context({
 	banner: {

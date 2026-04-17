@@ -1,7 +1,7 @@
 import type { Extension } from "@codemirror/state";
 import { MarkdownView, Notice, Plugin, normalizePath } from "obsidian";
 import { registerDictionaryLookupCommand, triggerDictionaryLookup } from "./commands/dictionaryLookupCommand";
-import { make_dictionary, type DictionaryEntry } from "./dictionary";
+import { make_dictionary, type DictionaryEntry, type RankingDictionary } from "./dictionary";
 import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecorations";
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
 import {
@@ -20,11 +20,13 @@ interface LegacyMandarinHelperSettings extends Partial<MandarinHelperSettings> {
 export default class MandarinHelperPlugin extends Plugin {
 	settings: MandarinHelperSettings;
 	dictionary: DictionaryEntry[] = [];
+	ranking: RankingDictionary = {};
 	private readonly editorExtensions: Extension[] = [];
 
 	async onload() {
 		await this.loadSettings();
 		await this.loadDictionary();
+		await this.loadRanking();
 
 		this.applyToneColors();
 		this.applyFontScale();
@@ -109,6 +111,25 @@ export default class MandarinHelperPlugin extends Plugin {
 			this.dictionary = [];
 			console.error("Mandarin Helper: failed to load dictionary.json", error);
 		}
+	}
+
+	private async loadRanking(): Promise<void> {
+		for (const rankingPath of this.getRankingPaths()) {
+			if (!await this.app.vault.adapter.exists(rankingPath)) {
+				continue;
+			}
+
+			try {
+				this.ranking = JSON.parse(await this.app.vault.adapter.read(rankingPath)) as RankingDictionary;
+				return;
+			} catch (error) {
+				this.ranking = {};
+				console.error(`Mandarin Helper: failed to load ranking.json from ${rankingPath}`, error);
+				return;
+			}
+		}
+
+		this.ranking = {};
 	}
 
 	async downloadDictionary(url: string): Promise<void> {
@@ -196,8 +217,19 @@ export default class MandarinHelperPlugin extends Plugin {
 		return normalizePath(`${this.getDictionaryFolderPath()}/dictionary.json`);
 	}
 
+	private getRankingPaths(): string[] {
+		return [
+			normalizePath(`${this.getPluginFolderPath()}/ranking.json`),
+			normalizePath(`${this.getDictionaryFolderPath()}/ranking.json`),
+		];
+	}
+
 	private getDictionaryFolderPath(): string {
-		return normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}/data`);
+		return normalizePath(`${this.getPluginFolderPath()}/data`);
+	}
+
+	private getPluginFolderPath(): string {
+		return normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}`);
 	}
 
 	private async ensureDictionaryFolderExists(): Promise<void> {

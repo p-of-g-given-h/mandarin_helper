@@ -64,6 +64,7 @@ Files:
 
 - `main.js`
 - `manifest.json`
+- `ranking.json`
 - `styles.css`
 
 Then reload Obsidian and enable **Settings → Community plugins → Mandarin Helper**.
@@ -123,6 +124,7 @@ src/
 
 - The plugin is intended to work offline after the dictionary has been downloaded.
 - Dictionary data is stored in the plugin's data directory inside `.obsidian/plugins/mandarin-helper/data/`.
+- `ranking.json` is a bundled plugin asset and should be shipped alongside `main.js`, `manifest.json`, and `styles.css` when publishing releases or installing manually.
 - The plugin is currently marked as mobile-compatible in `manifest.json`.
 
 ## License

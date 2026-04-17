@@ -78,3 +78,20 @@ re-write README.md to be a project readme on github
 
 Run the linter and fix all issues.
 
+Change the sorting of the displayed dictionary entries. Sort primary by increasing length of the hanzi string, and secondary by increasing length of the matching searchable. if the query matched the hanzi, use the shortest searchable for secondary sorting.
+
+Change the function parse_line: when turning a slash_part into a searchable string, remove the string ": Bsp.:" and everything that follows before normalizing
+
+Add a file wordlist.ts with a function make_ranking that gets called at build time. The function shall download the file from https://github.com/drkameleon/complete-hsk-vocabulary/blob/main/complete.json and parse its JSON content and process it like this:
+- create an empty result dictionary
+- go through each vector element in complete.json, which is a dictionary. Take the values of the keys "simplified" and "frequency". Add them to the result dictionary with simplified as the key and frequency as the value.
+- store the result dictionary in the file ranking.json in an appropriate path so that it can be read at plugin startup
+
+At plugin startup, load the ranking dictionary in ranking.json. Now when sorting matching dictionary entries, look up the ranking of each matching entrie's hanzi in the ranking, setting it to 1000000 if it doesn't exist in the ranking. Sort by increasing ranking, and decide ties by the former sorting method.
+
+Show the ranking of a dictionary entry in the popup with a small font in the beginning of a row.
+
+Omit showing the ranking for entries which cannot be found in the ranking dictionary
+
+Make sure ranking.json is included when publishing and installing the plugin
+

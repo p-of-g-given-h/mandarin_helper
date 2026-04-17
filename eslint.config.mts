@@ -14,7 +14,8 @@ export default tseslint.config(
 					allowDefaultProject: [
 						'eslint.config.js',
 						'manifest.json',
-						'test/dictionary.test.ts'
+						'test/dictionary.test.ts',
+						'test/wordlist.test.ts'
 					]
 				},
 				tsconfigRootDir: import.meta.dirname,
@@ -23,6 +24,18 @@ export default tseslint.config(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		files: ["src/wordlist.ts"],
+		languageOptions: {
+			globals: {
+				...globals.node,
+			},
+		},
+		rules: {
+			"import/no-nodejs-modules": "off",
+			"no-restricted-globals": "off",
+		},
+	},
 	{
 		files: ["test/**/*.ts"],
 		languageOptions: {

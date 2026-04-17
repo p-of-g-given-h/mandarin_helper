@@ -117,9 +117,19 @@
 .mandarin-helper-dictionary-row {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.5rem;
 	padding: 0.2rem 0;
 	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.mandarin-helper-dictionary-ranking {
+	min-width: 3.75rem;
+	font-size: 0.7rem;
+	line-height: 1;
+	color: var(--text-faint);
+	text-align: right;
+	font-variant-numeric: tabular-nums;
 }
 
 .mandarin-helper-dictionary-segment {
