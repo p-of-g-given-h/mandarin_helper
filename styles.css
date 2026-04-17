@@ -173,3 +173,16 @@
 	padding: 1rem 0;
 	color: var(--text-muted);
 }
+
+.setting-item.mandarin-helper-dictionary-presets-setting + .setting-item.mandarin-helper-dictionary-source-setting {
+	border-top: 0;
+}
+
+.setting-item.mandarin-helper-dictionary-source-setting .setting-item-control {
+	flex: 1 1 32rem;
+	max-width: none;
+}
+
+.setting-item.mandarin-helper-dictionary-source-setting .setting-item-control input[type="text"] {
+	width: min(100%, 32rem);
+}

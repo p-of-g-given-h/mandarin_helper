@@ -3,6 +3,8 @@ import type MandarinHelperPlugin from "./main";
 
 export const FONT_INCREASE_OPTIONS = ["0", "20", "40", "60", "90"] as const;
 export type FontIncreasePercent = typeof FONT_INCREASE_OPTIONS[number];
+export const ENGLISH_DICTIONARY_SOURCE_URL = "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.zip";
+export const GERMAN_DICTIONARY_SOURCE_URL = "https://github.com/gugray/HanDeDict/blob/master/handedict.u8";
 
 export interface MandarinHelperDisplayOptions {
 	displayPinyin: boolean;
@@ -25,7 +27,7 @@ export interface MandarinHelperSettings {
 export const DEFAULT_SETTINGS: MandarinHelperSettings = {
 	displayPinyin: true,
 	colorizeByTone: true,
-	dictionarySource: "https://github.com/gugray/HanDeDict/blob/master/handedict.u8",
+	dictionarySource: "",
 	fontIncreasePercent: "40",
 	tone1Color: "#008000",
 	tone2Color: "#0000ff",
@@ -80,12 +82,35 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 
 		let dictionarySourceValue = this.plugin.settings.dictionarySource;
 
-		new Setting(containerEl)
+		const dictionaryPresetsSetting = new Setting(containerEl)
+			.setName("Dictionary presets")
+			.setDesc("Fill the dictionary source field with a preset URL.")
+			.addButton((button) =>
+				button
+					.setButtonText("English")
+					.onClick(async () => {
+						dictionarySourceValue = ENGLISH_DICTIONARY_SOURCE_URL;
+						await this.plugin.updateSettings({ dictionarySource: dictionarySourceValue });
+						this.display();
+					}),
+			)
+			.addButton((button) =>
+				button
+					.setButtonText("German")
+					.onClick(async () => {
+						dictionarySourceValue = GERMAN_DICTIONARY_SOURCE_URL;
+						await this.plugin.updateSettings({ dictionarySource: dictionarySourceValue });
+						this.display();
+					}),
+			);
+		dictionaryPresetsSetting.settingEl.addClass("mandarin-helper-dictionary-presets-setting");
+
+		const dictionarySourceSetting = new Setting(containerEl)
 			.setName("Dictionary source")
 			.setDesc("Download dictionary entries from a source file into this plugin.")
 			.addText((text) =>
 				text
-					.setPlaceholder(DEFAULT_SETTINGS.dictionarySource)
+					.setPlaceholder("Paste a dictionary URL")
 					.setValue(dictionarySourceValue)
 					.onChange(async (value) => {
 						dictionarySourceValue = value;
@@ -108,6 +133,7 @@ export class MandarinHelperSettingTab extends PluginSettingTab {
 						}
 					}),
 			);
+		dictionarySourceSetting.settingEl.addClass("mandarin-helper-dictionary-source-setting");
 
 		new Setting(containerEl)
 			.setName("Increase font size")

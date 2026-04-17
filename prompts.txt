@@ -97,3 +97,15 @@ Make sure ranking.json is included when publishing and installing the plugin
 
 Hide the ranking in the popup again
 
+Add instructions to the README for manually installing it on Android
+
+if make_dictionary gets passed the URL of a zip file, it shall unpack it end continue with the .u8 file contained in it
+
+The setting for Dictionary source shall have to buttons called "English" and "German", which when pressed shall fill the URL field with https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.zip and https://github.com/gugray/HanDeDict/blob/master/handedict.u8 respectively. The URL field shall be empty by default.
+
+Put the URL field and Download button onto their own line
+
+remove the horizontal line between "Dictionary presets" and "Dictionary source"
+
+Make the URL field wider
+

@@ -53,15 +53,15 @@ Mandarin Helper currently provides these settings:
 - `Increase font size`
 - custom colors for tones 1 through 5
 
-The default dictionary source is:
+The dictionary source field is empty by default.
 
-`https://github.com/gugray/HanDeDict/blob/master/handedict.u8`
-
-Use the `Download` button in settings to fetch the dictionary and store it locally for the plugin.
+Use the `English` or `German` button in settings to fill in a preset dictionary URL, or paste your own source manually. The `Download` button fetches the dictionary and stores it locally for the plugin. The source can point directly to a `.u8` file or to a `.zip` archive that contains one.
 
 ## Installation
 
 ### Manual installation
+
+#### Desktop
 
 Copy these files into your vault at:
 
@@ -75,6 +75,27 @@ Files:
 - `styles.css`
 
 Then reload Obsidian and enable **Settings → Community plugins → Mandarin Helper**.
+
+#### Android
+
+To install the plugin manually on Android:
+
+1. Download or copy these files to your Android device:
+   - `main.js`
+   - `manifest.json`
+   - `ranking.json`
+   - `styles.css`
+2. Open your vault folder in an Android file manager. This is the folder that contains your notes and the hidden `.obsidian` directory.
+3. If needed, enable hidden files in the file manager so `.obsidian` is visible.
+4. Create this folder inside the vault if it does not already exist:
+
+   `.obsidian/plugins/mandarin-helper/`
+
+5. Copy the four plugin files directly into that folder.
+6. Fully close and reopen Obsidian on Android.
+7. In Obsidian, go to **Settings → Community plugins**, disable safe mode if needed, and enable **Mandarin Helper**.
+
+If the plugin does not appear, make sure the folder is named exactly `mandarin-helper` and that the files are not inside an extra nested folder from the archive extraction.
 
 ## Development
 
