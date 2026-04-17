@@ -47,7 +47,7 @@ function openDictionaryLookup(plugin: MandarinHelperPlugin, selection: string): 
 		colorizePinyin: plugin.settings.colorizeByTone,
 		colorizeHanzi: plugin.settings.colorizeByTone,
 	};
-	new DictionaryLookupModal(plugin.app, selection, matches, plugin.ranking, displayOptions).open();
+	new DictionaryLookupModal(plugin.app, selection, matches, displayOptions).open();
 }
 
 function getSelectedText(plugin: MandarinHelperPlugin): string {

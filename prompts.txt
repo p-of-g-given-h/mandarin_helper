@@ -95,3 +95,5 @@ Omit showing the ranking for entries which cannot be found in the ranking dictio
 
 Make sure ranking.json is included when publishing and installing the plugin
 
+Hide the ranking in the popup again
+

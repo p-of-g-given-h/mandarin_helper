@@ -1,6 +1,6 @@
 import { App, Modal, Notice } from "obsidian";
 import { getHanziCharacterAnnotations, getPinyinLabel, type ToneNumber } from "../hanzi/annotation";
-import type { DictionaryEntry, RankingDictionary } from "../dictionary";
+import type { DictionaryEntry } from "../dictionary";
 import type { MandarinHelperDisplayOptions } from "../settings";
 
 export class DictionaryLookupModal extends Modal {
@@ -8,7 +8,6 @@ export class DictionaryLookupModal extends Modal {
 		app: App,
 		private readonly query: string,
 		private readonly matches: DictionaryEntry[],
-		private readonly rankingDictionary: RankingDictionary,
 		private readonly displayOptions: MandarinHelperDisplayOptions,
 	) {
 		super(app);
@@ -37,10 +36,6 @@ export class DictionaryLookupModal extends Modal {
 
 		for (const [hanzi, , translations] of this.matches) {
 			const rowEl = resultsEl.createDiv({ cls: "mandarin-helper-dictionary-row" });
-			const rankingLabel = createRankingLabel(hanzi, rowEl.ownerDocument, this.rankingDictionary);
-			if (rankingLabel !== null) {
-				rowEl.append(rankingLabel);
-			}
 			rowEl.append(createHanziSegment(hanzi, rowEl.ownerDocument, this.displayOptions, this));
 			rowEl.append(createPinyinSegment(hanzi, rowEl.ownerDocument, this.displayOptions, this));
 
@@ -53,23 +48,6 @@ export class DictionaryLookupModal extends Modal {
 			}
 		}
 	}
-}
-
-function createRankingLabel(
-	hanzi: string,
-	document: Document,
-	rankingDictionary: RankingDictionary,
-): HTMLElement | null {
-	const ranking = rankingDictionary[hanzi];
-
-	if (ranking === undefined) {
-		return null;
-	}
-
-	const label = document.createElement("span");
-	label.className = "mandarin-helper-dictionary-ranking";
-	label.textContent = String(ranking);
-	return label;
 }
 
 function createHanziSegment(

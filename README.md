@@ -6,19 +6,26 @@ It adds pinyin above Hanzi in reading and editing views, colorizes tones, and pr
 
 ## Features
 
+### Hanzi Annotation
+
+![annotation example](annotation.png)
+
 - Render pinyin transliterations above Hanzi in reading mode
 - Show pinyin annotations directly in the editor
 - Color Hanzi and pinyin by tone
 - Adjust the display scale for Hanzi and pinyin
 - Download and load a local dictionary from a configurable source
 - Look up the current selection or, if nothing is selected, the current line
+
+### Dictionary Lookup
+
+![dictionary example](dictionary.png)
+
 - Open dictionary results from:
   - the `Dictionary Lookup` command
-  - the default hotkey `Ctrl+Shift+D`
+  - a configurable hotkey
   - the sidebar ribbon button with the `book-a` icon
 - Copy Hanzi, pinyin, or translations from the popup with one click
-
-## Dictionary Lookup
 
 Dictionary lookup searches against:
 
