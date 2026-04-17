@@ -15,7 +15,7 @@ export function registerDictionaryLookupCommand(plugin: MandarinHelperPlugin): v
 			},
 		],
 		checkCallback: (checking) => {
-			const selection = getSelectedText(plugin);
+			const selection = getLookupText(plugin);
 
 			if (selection.length === 0) {
 				return false;
@@ -28,6 +28,17 @@ export function registerDictionaryLookupCommand(plugin: MandarinHelperPlugin): v
 			return true;
 		},
 	});
+}
+
+export function triggerDictionaryLookup(plugin: MandarinHelperPlugin): void {
+	const selection = getLookupText(plugin);
+
+	if (selection.length === 0) {
+		new Notice("Select text or place the cursor on a line to look it up in the dictionary.");
+		return;
+	}
+
+	openDictionaryLookup(plugin, selection);
 }
 
 function openDictionaryLookup(plugin: MandarinHelperPlugin, selection: string): void {
@@ -54,4 +65,41 @@ function getSelectedText(plugin: MandarinHelperPlugin): string {
 	}
 
 	return window.getSelection()?.toString().trim() ?? "";
+}
+
+function getLookupText(plugin: MandarinHelperPlugin): string {
+	const selectedText = getSelectedText(plugin);
+	if (selectedText.length > 0) {
+		return selectedText;
+	}
+
+	return getCurrentLineLookupText(plugin);
+}
+
+function getCurrentLineLookupText(plugin: MandarinHelperPlugin): string {
+	const activeMarkdownView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+	const editor = activeMarkdownView?.editor;
+
+	if (!editor) {
+		return "";
+	}
+
+	const currentLine = editor.getLine(editor.getCursor().line);
+	return stripMarkdownForLookup(currentLine);
+}
+
+function stripMarkdownForLookup(value: string): string {
+	return value
+		.replace(/!\[([^\]]*)\]\([^)]+\)/gu, "$1")
+		.replace(/\[([^\]]+)\]\([^)]+\)/gu, "$1")
+		.replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/gu, "$2")
+		.replace(/\[\[([^\]]+)\]\]/gu, "$1")
+		.replace(/^\s{0,3}(?:>\s*)+/gu, "")
+		.replace(/^\s{0,3}(?:[-*+]|\d+\.)\s+\[(?: |x|X)\]\s+/gu, "")
+		.replace(/^\s{0,3}(?:[-*+]|\d+\.)\s+/gu, "")
+		.replace(/^\s{0,3}#{1,6}\s+/gu, "")
+		.replace(/[`*_~>#]/gu, "")
+		.replace(/[\[\]()!]/gu, "")
+		.replace(/\s+/gu, " ")
+		.trim();
 }

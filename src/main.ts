@@ -1,6 +1,6 @@
 import type { Extension } from "@codemirror/state";
 import { MarkdownView, Notice, Plugin, normalizePath } from "obsidian";
-import { registerDictionaryLookupCommand } from "./commands/dictionaryLookupCommand";
+import { registerDictionaryLookupCommand, triggerDictionaryLookup } from "./commands/dictionaryLookupCommand";
 import { make_dictionary, type DictionaryEntry } from "./dictionary";
 import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecorations";
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
@@ -31,6 +31,9 @@ export default class MandarinHelperPlugin extends Plugin {
 		this.syncEditorExtensions();
 		this.registerEditorExtension(this.editorExtensions);
 		registerDictionaryLookupCommand(this);
+		this.addRibbonIcon("book-a", "Dictionary lookup", () => {
+			triggerDictionaryLookup(this);
+		});
 		this.addSettingTab(new MandarinHelperSettingTab(this.app, this));
 		registerHanziRubyPostProcessor(this, () => this.getDisplayOptions());
 	}

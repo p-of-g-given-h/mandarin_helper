@@ -70,3 +70,7 @@ Do not show hanzi in bold face. Don't show the number of matches.
 
 Make all segments in the popup clickable. When clicked, copy its contents to the clipboard, close the popup, and display feedback what has been copied. In the header of the popup, add a small note "Click to copy to clipboard"
 
+Add a button in the sidebar with the icon "book-a" for dictionary lookup.
+
+When dictionary lookup gets triggered and no text is selected, use the text in the current line instead, stripped of markdown like # and - and [] and so on.
+
