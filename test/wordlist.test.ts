@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { pathToFileURL } from "node:url";
 import { make_ranking, parse_ranking } from "../src/wordlist.ts";
 
 const SAMPLE_COMPLETE_JSON = JSON.stringify([
@@ -47,7 +46,7 @@ export async function test_make_ranking(): Promise<void> {
 	assert.deepEqual(JSON.parse(writtenJson), ranking);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1]?.endsWith("wordlist.test.ts")) {
 	test_parse_ranking();
 	await test_make_ranking();
 }

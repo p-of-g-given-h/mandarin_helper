@@ -149,5 +149,12 @@ export default defineConfig([
 
 yes
 
+fix these issues:
+- Do not import Node.js builtin module "node:fs/promises"
+- Do not import Node.js builtin module "node:path"
+- Do not import Node.js builtin module "node:url"
+- Unexpected use of 'fetch'. Use the built-in requestUrl function instead of fetch for network requests in Obsidian.
+
+
 
 

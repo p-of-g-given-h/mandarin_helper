@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
 import { createJiti } from "jiti";
+import { writeFile } from "node:fs/promises";
 import { builtinModules } from 'node:module';
 
 const banner =
@@ -37,7 +38,20 @@ const prod = (process.argv[2] === "production");
 const jiti = createJiti(import.meta.url);
 const { COMPLETE_WORDLIST_URL, make_ranking } = await jiti.import("./src/wordlist.ts");
 
-await make_ranking(COMPLETE_WORDLIST_URL);
+await make_ranking(COMPLETE_WORDLIST_URL, {
+	fetchText: async (url) => {
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}`);
+		}
+
+		return await response.text();
+	},
+	writeJson: async (json) => {
+		await writeFile(new URL("./ranking.json", import.meta.url), json, "utf8");
+	},
+});
 
 const context = await esbuild.context({
 	banner: {

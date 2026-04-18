@@ -1,6 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { requestUrl } from "obsidian";
 
 export const COMPLETE_WORDLIST_URL = "https://github.com/drkameleon/complete-hsk-vocabulary/blob/main/complete.json";
 
@@ -14,7 +12,6 @@ interface CompleteWordlistEntry {
 export interface MakeRankingOptions {
 	fetchText?: (url: string) => Promise<string>;
 	writeJson?: (json: string) => Promise<void>;
-	outputPath?: string;
 }
 
 export function parse_ranking(value: string): RankingMap {
@@ -88,33 +85,17 @@ export async function make_ranking(
 		return ranking;
 	}
 
-	const outputPath = options?.outputPath ?? getDefaultOutputPath();
-
-	try {
-		await mkdir(path.dirname(outputPath), { recursive: true });
-		await writeFile(outputPath, json, "utf8");
-	} catch (error) {
-		throw new Error(
-			`Failed to write generated ranking JSON to ${outputPath}: ${getErrorMessage(error)}`,
-		);
-	}
-
 	return ranking;
 }
 
 async function downloadText(url: string): Promise<string> {
-	const response = await fetch(url);
+	const response = await requestUrl(url);
 
-	if (!response.ok) {
+	if (response.status >= 400) {
 		throw new Error(`HTTP ${response.status}`);
 	}
 
-	return await response.text();
-}
-
-function getDefaultOutputPath(): string {
-	const sourceDirectory = path.dirname(fileURLToPath(import.meta.url));
-	return path.resolve(sourceDirectory, "..", "ranking.json");
+	return response.text;
 }
 
 function isCompleteWordlistEntry(value: unknown): value is CompleteWordlistEntry {

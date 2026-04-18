@@ -1,17 +1,15 @@
 import assert from "node:assert/strict";
-import { readFile, rm, writeFile } from "node:fs/promises";
-import { pathToFileURL } from "node:url";
 import { deflateRawSync } from "node:zlib";
 import { extractU8TextFromZip, findDictionaryMatches, make_dictionary, parse_line } from "../src/dictionary.ts";
 
 const HANDEDICT_ZIP_URL = "https://github.com/gugray/HanDeDict/blob/master/handedict.zip";
 
 export async function test_parse(): Promise<void> {
-	await rm("dictionary.json", { force: true });
 	const dictionaryText = "# comment\n\u4f60\u597d \u4f60\u597d [ni3 hao3] /hello/\n\u518d\u89c1 \u518d\u89c1 [zai4 jian4] /goodbye/\n";
 	const zipBytes = createZipArchive([
 		{ fileName: "dict/handedict.u8", contents: dictionaryText },
 	]);
+	let writtenJson = "";
 
 	const parsed = await make_dictionary(HANDEDICT_ZIP_URL, {
 		fetchSource: async (url) => {
@@ -24,7 +22,7 @@ export async function test_parse(): Promise<void> {
 			};
 		},
 		writeJson: async (json) => {
-			await writeFile("dictionary.json", json, "utf8");
+			writtenJson = json;
 		},
 	});
 	const [hanzi, searchables, translations] = parsed[0] ?? [];
@@ -35,7 +33,7 @@ export async function test_parse(): Promise<void> {
 	assert.deepEqual(translations, ["hello"]);
 	assert.ok(parsed.some(([, , entryTranslations]) => entryTranslations.includes("goodbye")));
 
-	const dictionaryFile = JSON.parse(await readFile("dictionary.json", "utf8")) as unknown[];
+	const dictionaryFile = JSON.parse(writtenJson) as unknown[];
 	assert.equal(dictionaryFile.length, parsed.length);
 }
 
@@ -97,7 +95,7 @@ export async function test_extract_u8_text_from_zip(): Promise<void> {
 	assert.equal(extracted, dictionaryText);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1]?.endsWith("dictionary.test.ts")) {
 	test_find_dictionary_matches();
 	test_find_dictionary_matches_prefers_lower_ranking_before_legacy_sort();
 	test_parse_line_strips_example_suffix_from_searchable();
