@@ -32,18 +32,6 @@ export default tseslint.config(
 		},
 	},
 	{
-		files: ["src/wordlist.ts"],
-		languageOptions: {
-			globals: {
-				...globals.node,
-			},
-		},
-		rules: {
-			"import/no-nodejs-modules": "off",
-			"no-restricted-globals": "off",
-		},
-	},
-	{
 		files: ["test/**/*.ts"],
 		languageOptions: {
 			globals: {
