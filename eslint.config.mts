@@ -25,6 +25,13 @@ export default tseslint.config(
 	},
 	...obsidianmd.configs.recommended,
 	{
+		files: ["**/*.ts"],
+		rules: {
+			"obsidianmd/sample-names": "off",
+			"obsidianmd/prefer-file-manager-trash-file": "error",
+		},
+	},
+	{
 		files: ["src/wordlist.ts"],
 		languageOptions: {
 			globals: {
