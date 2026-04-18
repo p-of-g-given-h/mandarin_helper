@@ -111,3 +111,11 @@ Make the URL field wider
 
 adjust the licence file
 
+properly acknowledge that this plugin uses the pinyin-pro library
+
+What is the minimum Obsidian version that this plugin requires_
+
+this is the default from the sample plugin. But which level of the plugin API is actually used?
+
+yes update them
+

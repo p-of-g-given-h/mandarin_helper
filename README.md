@@ -19,6 +19,8 @@ It adds pinyin above Hanzi in reading and editing views, colorizes tones, and pr
 
 ### Dictionary Lookup
 
+This plugin supports loading dictionaries in a [CEDICT](https://en.wikipedia.org/wiki/CEDICT) compatible format. After installation, provide the URL of the raw dictionary and press "Download" in the settings. URLs for English-Chinese and German-Chinese dictionaries are pre-provided.
+
 ![dictionary example](dictionary.png)
 
 - Open dictionary results from:
@@ -154,6 +156,13 @@ src/
 - Dictionary data is stored in the plugin's data directory inside `.obsidian/plugins/mandarin-helper/data/`.
 - `ranking.json` is a bundled plugin asset and should be shipped alongside `main.js`, `manifest.json`, and `styles.css` when publishing releases or installing manually.
 - The plugin is currently marked as mobile-compatible in `manifest.json`.
+
+## Third-party libraries
+
+Mandarin Helper uses [`pinyin-pro`](https://github.com/zh-lx/pinyin-pro) for Hanzi-to-Pinyin conversion and related pinyin normalization. `pinyin-pro` is created by `zh-lx` and distributed under the MIT License.
+
+See `THIRD_PARTY_NOTICES.md` for the full license notice included for this dependency.
+
 
 ## License
 
