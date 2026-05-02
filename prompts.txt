@@ -157,6 +157,10 @@ fix these issues:
 
 Make sure that wordlist.ts gets checked by eslint
 
+When displaying Pinyin annotations, increase the vertical spacing to the previous line a little
+
+That didn't work
+
 
 
 
