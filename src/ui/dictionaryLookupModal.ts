@@ -1,4 +1,4 @@
-import { App, Modal, Notice } from "obsidian";
+import { App, MarkdownView, Modal, Notice, Platform } from "obsidian";
 import { getHanziCharacterAnnotations, getPinyinLabel, type ToneNumber } from "../hanzi/annotation";
 import type { DictionaryEntry } from "../dictionary";
 import type { MandarinHelperDisplayOptions } from "../settings";
@@ -21,7 +21,7 @@ export class DictionaryLookupModal extends Modal {
 
 		contentEl.createDiv({
 			cls: "mandarin-helper-dictionary-copy-note",
-			text: "Click to copy to clipboard",
+			text: Platform.isMobile ? "Tap to insert at the cursor" : "Click to copy. Shift-click to insert at the cursor.",
 		});
 
 		const resultsEl = contentEl.createDiv({ cls: "mandarin-helper-dictionary-results" });
@@ -127,16 +127,47 @@ function makeSegmentClickable(segment: HTMLElement, modal: DictionaryLookupModal
 	segment.tabIndex = 0;
 	segment.setAttribute("role", "button");
 
-	segment.addEventListener("click", () => {
-		void copySegmentContent(segment, modal);
+	segment.addEventListener("click", (event) => {
+		void handleSegmentAction(segment, modal, shouldInsertSegment(event));
 	});
 
 	segment.addEventListener("keydown", (event) => {
 		if (event.key === "Enter" || event.key === " ") {
 			event.preventDefault();
-			void copySegmentContent(segment, modal);
+			void handleSegmentAction(segment, modal, shouldInsertSegment(event));
 		}
 	});
+}
+
+function shouldInsertSegment(event: MouseEvent | KeyboardEvent): boolean {
+	return Platform.isMobile || event.shiftKey;
+}
+
+async function handleSegmentAction(segment: HTMLElement, modal: DictionaryLookupModal, shouldInsert: boolean): Promise<void> {
+	if (shouldInsert) {
+		insertSegmentContent(segment, modal);
+		return;
+	}
+
+	await copySegmentContent(segment, modal);
+}
+
+function insertSegmentContent(segment: HTMLElement, modal: DictionaryLookupModal): void {
+	const text = segment.textContent?.trim() ?? "";
+
+	if (text.length === 0) {
+		return;
+	}
+
+	const editor = modal.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+	if (!editor) {
+		new Notice("No active editor to insert into.");
+		return;
+	}
+
+	editor.replaceRange(text, editor.getCursor("to"));
+	modal.close();
+	new Notice(`Inserted: ${text}`);
 }
 
 async function copySegmentContent(segment: HTMLElement, modal: DictionaryLookupModal): Promise<void> {

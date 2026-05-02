@@ -161,6 +161,8 @@ When displaying Pinyin annotations, increase the vertical spacing to the previou
 
 That didn't work
 
+Currently licking on an entry in the dictionary popup copies it to the clipboard. On mobile, it shall instead be inserted at the end of the current selection (at the cursor if nothing is selected). On desktop, this shall happen on Shift+click. Adjust the hint text accordingly.
+
 
 
 
