@@ -163,6 +163,8 @@ That didn't work
 
 Currently licking on an entry in the dictionary popup copies it to the clipboard. On mobile, it shall instead be inserted at the end of the current selection (at the cursor if nothing is selected). On desktop, this shall happen on Shift+click. Adjust the hint text accordingly.
 
+When doing a dictionary lookup, create a regex out of the query, by replacing each sequence of consecutive whitespace by an expression that matches everything. Then use the resulting regex to match against the searchables.
+
 
 
 

@@ -54,6 +54,9 @@ export function test_find_dictionary_matches(): void {
 	const searchableMatches = findDictionaryMatches(entries, "HEL");
 	assert.deepEqual(searchableMatches.map((entry) => entry[0]), ["\u4f60\u4eec", "\u4f60\u597d"]);
 
+	const whitespaceRegexMatches = findDictionaryMatches(entries, "ti qi");
+	assert.deepEqual(whitespaceRegexMatches.map((entry) => entry[0]), ["\u5929\u6c14"]);
+
 	const searchablePrimarySortMatches = findDictionaryMatches(entries, "he");
 	assert.deepEqual(searchablePrimarySortMatches.map((entry) => entry[0]), ["\u4f60\u4eec", "\u4f60\u597d", "\u5929\u5802", "\u5929\u6c14", "\u4ed6\u4eec\u597d"]);
 

@@ -71,16 +71,52 @@ export function normalize(value: string): string {
 	}
 
 	return normalized
+		.toLowerCase();
+}
+
+export function normalizePinyin(value: string): string {
+	let normalized = "";
+	let parenthesesDepth = 0;
+	let bracketDepth = 0;
+
+	for (const character of value) {
+		if (character === "(") {
+			parenthesesDepth += 1;
+			continue;
+		}
+
+		if (character === ")") {
+			parenthesesDepth = Math.max(0, parenthesesDepth - 1);
+			continue;
+		}
+
+		if (character === "[") {
+			bracketDepth += 1;
+			continue;
+		}
+
+		if (character === "]") {
+			bracketDepth = Math.max(0, bracketDepth - 1);
+			continue;
+		}
+
+		if (parenthesesDepth === 0 && bracketDepth === 0) {
+			normalized += character;
+		}
+	}
+
+	return normalized
 		.replace(/\s+/gu, "")
 		.toLowerCase()
 		.replace(/u:|v|\u00fc/gu, "u");
 }
 
+
 export function parse_line(value: string): DictionaryEntry {
 	const slashParts = value.split("/").filter((slashPart) => slashPart.length > 0);
 	const [firstSlashPart = ""] = slashParts;
 	const [, hanzi = ""] = firstSlashPart.trim().split(/\s+/u);
-	const npinyin = normalize(pinyin(hanzi, { toneType: "none" }));
+	const npinyin = normalizePinyin(pinyin(hanzi, { toneType: "none" }));
 	const searchables = [npinyin];
 	const translations: string[] = [];
 
@@ -218,6 +254,7 @@ export function findDictionaryMatches(
 ): DictionaryEntry[] {
 	const rawQuery = query.trim();
 	const normalizedQuery = normalize(rawQuery);
+	const normalizedQueryRegex = createSearchableQueryRegex(normalizedQuery);
 
 	if (rawQuery.length === 0) {
 		return [];
@@ -225,7 +262,7 @@ export function findDictionaryMatches(
 
 	return entries
 		.map((entry) => {
-			const sortKey = getDictionaryMatchSortKey(entry, rawQuery, normalizedQuery, rankingDictionary);
+			const sortKey = getDictionaryMatchSortKey(entry, rawQuery, normalizedQueryRegex, rankingDictionary);
 			return sortKey === null ? null : { entry, ...sortKey };
 		})
 		.filter((match): match is DictionaryMatch => match !== null)
@@ -281,16 +318,16 @@ async function downloadDictionarySource(url: string): Promise<DictionarySourceRe
 function getDictionaryMatchSortKey(
 	[hanzi, searchables]: DictionaryEntry,
 	rawQuery: string,
-	normalizedQuery: string,
+	normalizedQueryRegex: RegExp | null,
 	rankingDictionary: RankingDictionary,
 ): Omit<DictionaryMatch, "entry"> | null {
 	const matchingSearchableLengths: number[] = [];
 
 	const matchesHanzi = hanzi.includes(rawQuery);
 
-	if (normalizedQuery.length > 0) {
+	if (normalizedQueryRegex !== null) {
 		for (const searchable of searchables) {
-			if (searchable.includes(normalizedQuery)) {
+			if (normalizedQueryRegex.test(searchable)) {
 				matchingSearchableLengths.push(searchable.length);
 			}
 		}
@@ -307,6 +344,23 @@ function getDictionaryMatchSortKey(
 			? Math.min(...searchables.map((searchable) => searchable.length))
 			: Math.min(...matchingSearchableLengths),
 	};
+}
+
+function createSearchableQueryRegex(normalizedQuery: string): RegExp | null {
+	if (normalizedQuery.length === 0) {
+		return null;
+	}
+
+	const pattern = normalizedQuery
+		.split(/\s+/u)
+		.map(escapeRegex)
+		.join(".*");
+
+	return new RegExp(pattern, "u");
+}
+
+function escapeRegex(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
 function getErrorMessage(error: unknown): string {
