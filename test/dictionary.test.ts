@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
-import { extractU8TextFromZip, findDictionaryMatches, make_dictionary, parse_line } from "../src/dictionary.ts";
+import { extractU8TextFromZip, findDictionaryMatches, make_dictionary, parse_line, type DictionaryEntry } from "../src/dictionary.ts";
 
 const HANDEDICT_ZIP_URL = "https://github.com/gugray/HanDeDict/blob/master/handedict.zip";
 
@@ -78,6 +78,38 @@ export function test_find_dictionary_matches_prefers_lower_ranking_before_legacy
 	assert.deepEqual(rankedMatches.map((entry) => entry[0]), ["\u4f60\u597d", "\u4f60", "\u4f60\u4eec"]);
 }
 
+export function test_find_dictionary_matches_limits_results_after_sorting(): void {
+	const entries = Array.from({ length: 180 }, (_, index) => {
+		const hanzi = `\u8bcd${index.toString().padStart(3, "0")}`;
+		return [hanzi, ["common"], ["common"]] satisfies [string, string[], string[]];
+	});
+	const ranking = Object.fromEntries(entries.map(([hanzi], index) => [hanzi, 180 - index]));
+
+	const matches = findDictionaryMatches(entries, "common", ranking);
+
+	assert.equal(matches.length, 150);
+	assert.equal(matches[0]?.[0], "\u8bcd179");
+	assert.equal(matches[49]?.[0], "\u8bcd130");
+	assert.equal(matches[50]?.[0], "\u8bcd129");
+	assert.equal(matches.at(-1)?.[0], "\u8bcd030");
+}
+
+export function test_find_dictionary_matches_concatenates_query_buckets(): void {
+	const entries = [
+		["\u7cbe\u786e", ["nihao"], ["ranked lower, but exact pinyin"]],
+		["\u8bcd\u8bed", ["other", "ni hao"], ["ni hao"]],
+		["\u6a21\u7cca", ["xnihaoy"], ["broad pinyin match"]],
+	] satisfies DictionaryEntry[];
+
+	const matches = findDictionaryMatches(entries, "ni hao", {
+		"\u6a21\u7cca": 1,
+		"\u8bcd\u8bed": 2,
+		"\u7cbe\u786e": 3,
+	});
+
+	assert.deepEqual(matches.map((entry) => entry[0]), ["\u7cbe\u786e", "\u8bcd\u8bed", "\u6a21\u7cca"]);
+}
+
 export function test_parse_line_strips_example_suffix_from_searchable(): void {
 	const [hanzi, searchables, translations] = parse_line("\u50b3\u7d71 \u4f20\u7edf /tradition: Bsp.: alte Tradition/legacy/");
 
@@ -101,6 +133,8 @@ export async function test_extract_u8_text_from_zip(): Promise<void> {
 if (process.argv[1]?.endsWith("dictionary.test.ts")) {
 	test_find_dictionary_matches();
 	test_find_dictionary_matches_prefers_lower_ranking_before_legacy_sort();
+	test_find_dictionary_matches_limits_results_after_sorting();
+	test_find_dictionary_matches_concatenates_query_buckets();
 	test_parse_line_strips_example_suffix_from_searchable();
 	await test_extract_u8_text_from_zip();
 	await test_parse();

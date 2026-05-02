@@ -165,6 +165,14 @@ Currently licking on an entry in the dictionary popup copies it to the clipboard
 
 When doing a dictionary lookup, create a regex out of the query, by replacing each sequence of consecutive whitespace by an expression that matches everything. Then use the resulting regex to match against the searchables.
 
+Only show the top 100 of the sorted matching dictionary entries
+
+Make the dictionary lookup more sophisticated by querying three times, each time with a different regex:
+1. remove all whitespace from the query, add a start string marker at the beginning, and an end string marker at the end. Only match against the pinyin searchable (the first in the list per dictionary entry).
+2. replace all substrings of subsequent whitespaces with a regex that matches one or more non-letter characters. In the beginning add a regex that matches either a non-letter character or the start of the string. In the end add a regex that matches either a non-letter character or the end of the string. Match against all searchables.
+3. use the current regex and match against all searchables.
+Sort each of the three matching result sets by their ranking, and then ordered from 1 to 3 take the top 50 entries that aren't yet included in the top 50 of higher-ordered result lists. Concatenate the three top 50 result lists.
+
 
 
 

@@ -38,6 +38,7 @@ const ZIP_ENCRYPTED_FLAG = 0x0001;
 const ZIP_UTF8_FLAG = 0x0800;
 const ZIP64_FIELD_LIMIT = 0xffff;
 const ZIP64_OFFSET_LIMIT = 0xffffffff;
+const MAX_DICTIONARY_MATCHES_PER_QUERY = 50;
 
 export function normalize(value: string): string {
 	let normalized = "";
@@ -254,24 +255,44 @@ export function findDictionaryMatches(
 ): DictionaryEntry[] {
 	const rawQuery = query.trim();
 	const normalizedQuery = normalize(rawQuery);
-	const normalizedQueryRegex = createSearchableQueryRegex(normalizedQuery);
+	const queryRegexes = [
+		{
+			regex: createExactPinyinQueryRegex(rawQuery),
+			searchableIndexes: [0],
+			shouldMatchHanzi: false,
+		},
+		{
+			regex: createWordSearchableQueryRegex(normalizedQuery),
+			searchableIndexes: null,
+			shouldMatchHanzi: false,
+		},
+		{
+			regex: createSearchableQueryRegex(normalizedQuery),
+			searchableIndexes: null,
+			shouldMatchHanzi: true,
+		},
+	];
 
 	if (rawQuery.length === 0) {
 		return [];
 	}
 
-	return entries
-		.map((entry) => {
-			const sortKey = getDictionaryMatchSortKey(entry, rawQuery, normalizedQueryRegex, rankingDictionary);
-			return sortKey === null ? null : { entry, ...sortKey };
-		})
-		.filter((match): match is DictionaryMatch => match !== null)
-		.sort((left, right) =>
-			left.ranking - right.ranking
-			|| left.hanziLength - right.hanziLength
-			|| left.secondaryLength - right.secondaryLength,
-		)
-		.map((match) => match.entry);
+	const selectedHanzi = new Set<string>();
+	const resultSets = queryRegexes.map(({ regex, searchableIndexes, shouldMatchHanzi }) =>
+		getSortedDictionaryMatches(entries, rawQuery, regex, rankingDictionary, searchableIndexes, shouldMatchHanzi),
+	);
+
+	return resultSets.flatMap((matches) => {
+		const selectedMatches = matches
+			.filter((match) => !selectedHanzi.has(match.entry[0]))
+			.slice(0, MAX_DICTIONARY_MATCHES_PER_QUERY);
+
+		for (const match of selectedMatches) {
+			selectedHanzi.add(match.entry[0]);
+		}
+
+		return selectedMatches.map((match) => match.entry);
+	});
 }
 
 function resolveDictionaryUrl(url: string): string {
@@ -315,18 +336,58 @@ async function downloadDictionarySource(url: string): Promise<DictionarySourceRe
 	};
 }
 
+function getSortedDictionaryMatches(
+	entries: DictionaryEntry[],
+	rawQuery: string,
+	normalizedQueryRegex: RegExp | null,
+	rankingDictionary: RankingDictionary,
+	searchableIndexes: number[] | null,
+	shouldMatchHanzi: boolean,
+): DictionaryMatch[] {
+	if (normalizedQueryRegex === null && !shouldMatchHanzi) {
+		return [];
+	}
+
+	return entries
+		.map((entry) => {
+			const sortKey = getDictionaryMatchSortKey(
+				entry,
+				rawQuery,
+				normalizedQueryRegex,
+				rankingDictionary,
+				searchableIndexes,
+				shouldMatchHanzi,
+			);
+			return sortKey === null ? null : { entry, ...sortKey };
+		})
+		.filter((match): match is DictionaryMatch => match !== null)
+		.sort(compareDictionaryMatches);
+}
+
+function compareDictionaryMatches(left: DictionaryMatch, right: DictionaryMatch): number {
+	return left.ranking - right.ranking
+		|| left.hanziLength - right.hanziLength
+		|| left.secondaryLength - right.secondaryLength;
+}
+
 function getDictionaryMatchSortKey(
 	[hanzi, searchables]: DictionaryEntry,
 	rawQuery: string,
 	normalizedQueryRegex: RegExp | null,
 	rankingDictionary: RankingDictionary,
+	searchableIndexes: number[] | null,
+	shouldMatchHanzi: boolean,
 ): Omit<DictionaryMatch, "entry"> | null {
 	const matchingSearchableLengths: number[] = [];
 
-	const matchesHanzi = hanzi.includes(rawQuery);
+	const matchesHanzi = shouldMatchHanzi && hanzi.includes(rawQuery);
 
 	if (normalizedQueryRegex !== null) {
-		for (const searchable of searchables) {
+		const selectedSearchables = searchableIndexes === null
+			? searchables
+			: searchableIndexes.flatMap((index) => searchables[index] === undefined ? [] : [searchables[index]]);
+
+		for (const searchable of selectedSearchables) {
 			if (normalizedQueryRegex.test(searchable)) {
 				matchingSearchableLengths.push(searchable.length);
 			}
@@ -344,6 +405,31 @@ function getDictionaryMatchSortKey(
 			? Math.min(...searchables.map((searchable) => searchable.length))
 			: Math.min(...matchingSearchableLengths),
 	};
+}
+
+function createExactPinyinQueryRegex(rawQuery: string): RegExp | null {
+	const normalizedPinyinQuery = normalizePinyin(rawQuery);
+	if (normalizedPinyinQuery.length === 0) {
+		return null;
+	}
+
+	return new RegExp(`^${escapeRegex(normalizedPinyinQuery)}$`, "u");
+}
+
+function createWordSearchableQueryRegex(normalizedQuery: string): RegExp | null {
+	const parts = normalizedQuery
+		.split(/\s+/u)
+		.filter((part) => part.length > 0);
+
+	if (parts.length === 0) {
+		return null;
+	}
+
+	const pattern = parts
+		.map(escapeRegex)
+		.join("[^\\p{L}]+");
+
+	return new RegExp(`(?:^|[^\\p{L}])${pattern}(?:[^\\p{L}]|$)`, "u");
 }
 
 function createSearchableQueryRegex(normalizedQuery: string): RegExp | null {
