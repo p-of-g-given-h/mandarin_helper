@@ -165,7 +165,12 @@ function insertSegmentContent(segment: HTMLElement, modal: DictionaryLookupModal
 		return;
 	}
 
-	editor.replaceRange(text, editor.getCursor("to"));
+	const insertionStart = editor.getCursor("to");
+	editor.replaceRange(text, insertionStart);
+	editor.setCursor({
+		line: insertionStart.line,
+		ch: insertionStart.ch + text.length,
+	});
 	modal.close();
 	new Notice(`Inserted: ${text}`);
 }

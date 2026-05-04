@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
-import { extractU8TextFromZip, findDictionaryMatches, make_dictionary, parse_line, type DictionaryEntry } from "../src/dictionary.ts";
+import { extractU8TextFromZip, findDictionaryMatches, make_dictionary, parseDictionaryFileJson, parse_line, type DictionaryEntry } from "../src/dictionary.ts";
 
 const HANDEDICT_ZIP_URL = "https://github.com/gugray/HanDeDict/blob/master/handedict.zip";
 
@@ -33,8 +33,11 @@ export async function test_parse(): Promise<void> {
 	assert.deepEqual(translations, ["hello"]);
 	assert.ok(parsed.some(([, , entryTranslations]) => entryTranslations.includes("goodbye")));
 
-	const dictionaryFile = JSON.parse(writtenJson) as unknown[];
-	assert.equal(dictionaryFile.length, parsed.length);
+	const dictionaryFile = JSON.parse(writtenJson) as { entries: unknown[]; version: string };
+	assert.equal(dictionaryFile.version, "1.1.0");
+	assert.equal(dictionaryFile.entries.length, parsed.length);
+	assert.equal(parseDictionaryFileJson(writtenJson).length, parsed.length);
+	assert.equal(parseDictionaryFileJson(JSON.stringify(parsed)).length, parsed.length);
 }
 
 export function test_find_dictionary_matches(): void {

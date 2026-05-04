@@ -3,6 +3,10 @@ import { pinyin } from "pinyin-pro";
 
 export type DictionaryEntry = [string, string[], string[]];
 export type RankingDictionary = Record<string, number>;
+export interface DictionaryFile {
+	entries: DictionaryEntry[];
+	version: "1.1.0";
+}
 export interface DictionaryMatch {
 	entry: DictionaryEntry;
 	ranking: number;
@@ -39,6 +43,7 @@ const ZIP_UTF8_FLAG = 0x0800;
 const ZIP64_FIELD_LIMIT = 0xffff;
 const ZIP64_OFFSET_LIMIT = 0xffffffff;
 const MAX_DICTIONARY_MATCHES_PER_QUERY = 50;
+const DICTIONARY_FILE_VERSION: DictionaryFile["version"] = "1.1.0";
 
 export function normalize(value: string): string {
 	let normalized = "";
@@ -46,15 +51,16 @@ export function normalize(value: string): string {
 	let bracketDepth = 0;
 
 	for (const character of value) {
-		if (character === "(") {
-			parenthesesDepth += 1;
-			continue;
-		}
+		// we want to match against words in parantheses after all
+		// if (character === "(") {
+		// 	parenthesesDepth += 1;
+		// 	continue;
+		// }
 
-		if (character === ")") {
-			parenthesesDepth = Math.max(0, parenthesesDepth - 1);
-			continue;
-		}
+		// if (character === ")") {
+		// 	parenthesesDepth = Math.max(0, parenthesesDepth - 1);
+		// 	continue;
+		// }
 
 		if (character === "[") {
 			bracketDepth += 1;
@@ -164,7 +170,7 @@ export async function make_dictionary(url: string, options?: MakeDictionaryOptio
 		);
 	}
 
-	const json = JSON.stringify(parsed, null, "\t");
+	const json = JSON.stringify(createDictionaryFile(parsed), null, "\t");
 
 	if (options?.writeJson) {
 		try {
@@ -178,6 +184,34 @@ export async function make_dictionary(url: string, options?: MakeDictionaryOptio
 	}
 
 	return parsed;
+}
+
+export function createDictionaryFile(entries: DictionaryEntry[]): DictionaryFile {
+	return {
+		entries,
+		version: DICTIONARY_FILE_VERSION,
+	};
+}
+
+export function parseDictionaryFileJson(value: string): DictionaryEntry[] {
+	const parsed = JSON.parse(value) as unknown;
+
+	if (Array.isArray(parsed)) {
+		return parsed as DictionaryEntry[];
+	}
+
+	if (isDictionaryFile(parsed)) {
+		return parsed.entries;
+	}
+
+	throw new Error("Dictionary JSON must be an array or an object with an entries array.");
+}
+
+function isDictionaryFile(value: unknown): value is DictionaryFile {
+	return typeof value === "object"
+		&& value !== null
+		&& "entries" in value
+		&& Array.isArray(value.entries);
 }
 
 export async function extractU8TextFromZip(

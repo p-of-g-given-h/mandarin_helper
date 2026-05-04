@@ -1,7 +1,7 @@
 import type { Extension } from "@codemirror/state";
 import { MarkdownView, Notice, Plugin, normalizePath } from "obsidian";
 import { registerDictionaryLookupCommand, triggerDictionaryLookup } from "./commands/dictionaryLookupCommand";
-import { make_dictionary, type DictionaryEntry, type RankingDictionary } from "./dictionary";
+import { make_dictionary, parseDictionaryFileJson, type DictionaryEntry, type RankingDictionary } from "./dictionary";
 import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecorations";
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
 import {
@@ -106,7 +106,7 @@ export default class MandarinHelperPlugin extends Plugin {
 		}
 
 		try {
-			this.dictionary = JSON.parse(await this.app.vault.adapter.read(dictionaryPath)) as DictionaryEntry[];
+			this.dictionary = parseDictionaryFileJson(await this.app.vault.adapter.read(dictionaryPath));
 		} catch (error) {
 			this.dictionary = [];
 			console.error("Mandarin Helper: failed to load dictionary.json", error);
