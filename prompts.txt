@@ -179,4 +179,6 @@ when creating the dictionary, in the resulting json wrap the list in a dict with
 
 
 
+Fill the fields in package.json properly
+
 

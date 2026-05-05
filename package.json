@@ -1,9 +1,10 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "mandarin-helper",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Obsidian plugin for Hanzi pinyin annotations, tone coloring, and local dictionary lookup.",
 	"main": "main.js",
 	"type": "module",
+	"private": true,
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
@@ -11,7 +12,24 @@
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"lint": "eslint ."
 	},
-	"keywords": [],
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"mandarin",
+		"chinese",
+		"pinyin",
+		"hanzi",
+		"dictionary"
+	],
+	"author": "Peter Haider",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/p-of-g-given-h/mandarin_helper.git"
+	},
+	"bugs": {
+		"url": "https://github.com/p-of-g-given-h/mandarin_helper/issues"
+	},
+	"homepage": "https://github.com/p-of-g-given-h/mandarin_helper#readme",
 	"license": "0-BSD",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
