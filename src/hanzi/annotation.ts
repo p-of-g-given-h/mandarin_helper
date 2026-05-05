@@ -1,4 +1,4 @@
-import { pinyin } from "pinyin-pro";
+import { getSymbolPinyinArray } from "./pinyinCache";
 
 const HANZI_CHARACTER_PATTERN = /\p{Script=Han}/u;
 const HANZI_RUN_PATTERN = /\p{Script=Han}+/gu;
@@ -95,7 +95,7 @@ export function getHanziRuns(text: string): HanziRunMatch[] {
 }
 
 export function getHanziCharacterAnnotations(hanziRun: string): HanziCharacterAnnotation[] | null {
-	const syllables = pinyin(hanziRun, { type: "array", toneType: "symbol" });
+	const syllables = getSymbolPinyinArray(hanziRun);
 	const characters = Array.from(hanziRun);
 
 	if (!Array.isArray(syllables) || syllables.length !== characters.length) {
@@ -110,7 +110,7 @@ export function getHanziCharacterAnnotations(hanziRun: string): HanziCharacterAn
 }
 
 export function getPinyinLabel(hanziRun: string): string {
-	const syllables = pinyin(hanziRun, { type: "array", toneType: "symbol" });
+	const syllables = getSymbolPinyinArray(hanziRun);
 	return Array.isArray(syllables) ? syllables.join(" ") : String(syllables);
 }
 

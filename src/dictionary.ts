@@ -1,5 +1,5 @@
 import { requestUrl } from "obsidian";
-import { pinyin } from "pinyin-pro";
+import { getPlainPinyin } from "./hanzi/pinyinCache";
 
 export type DictionaryEntry = [string, string[], string[]];
 export type RankingDictionary = Record<string, number>;
@@ -123,7 +123,7 @@ export function parse_line(value: string): DictionaryEntry {
 	const slashParts = value.split("/").filter((slashPart) => slashPart.length > 0);
 	const [firstSlashPart = ""] = slashParts;
 	const [, hanzi = ""] = firstSlashPart.trim().split(/\s+/u);
-	const npinyin = normalizePinyin(pinyin(hanzi, { toneType: "none" }));
+	const npinyin = normalizePinyin(getPlainPinyin(hanzi));
 	const searchables = [npinyin];
 	const translations: string[] = [];
 
