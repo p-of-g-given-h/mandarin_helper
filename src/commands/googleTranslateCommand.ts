@@ -7,7 +7,7 @@ const GOOGLE_TRANSLATE_POPUP_FEATURES = "popup=yes,width=1000,height=720";
 export function registerGoogleTranslateCommand(plugin: MandarinHelperPlugin): void {
 	plugin.addCommand({
 		id: "google-translate-to-simplified-chinese",
-		name: "Translate to simplified Chinese",
+		name: "Translate to mandarin",
 		icon: "book-type",
 		checkCallback: (checking) => {
 			const lookupText = getLookupText(plugin);
@@ -40,7 +40,7 @@ function openGoogleTranslate(lookupText: string): void {
 	const popup = window.open(buildGoogleTranslateUrl(lookupText), "mandarin-helper-google-translate", GOOGLE_TRANSLATE_POPUP_FEATURES);
 
 	if (!popup) {
-		new Notice("Could not open Google Translate popup.");
+		new Notice("Could not open google translate popup.");
 		return;
 	}
 

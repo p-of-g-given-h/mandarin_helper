@@ -38,7 +38,7 @@ export default class MandarinHelperPlugin extends Plugin {
 		this.addRibbonIcon("book-a", "Dictionary lookup", () => {
 			triggerDictionaryLookup(this);
 		});
-		this.addRibbonIcon("book-type", "Translate to simplified Chinese", () => {
+		this.addRibbonIcon("book-type", "Translate to mandarin", () => {
 			triggerGoogleTranslate(this);
 		});
 		this.addSettingTab(new MandarinHelperSettingTab(this.app, this));
