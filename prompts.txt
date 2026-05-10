@@ -183,4 +183,7 @@ Fill the fields in package.json properly
 
 implement a cache for the lookups with pinyin-pro: store a map of hanzi strings to return values of pinyin-pro, so that the same hanzi string doesn't have to be processed by pinyin-pro twice. set the cache size to 10000 entries.
 
+Add a new action with configurable shortcut and a button with the book-type icon that takes the current selection, or the current line if the selection is empty, and opens a browser window popup with a query to Google translate for that text, from auto-detected source language to Chinese (simplified)
+
+
 

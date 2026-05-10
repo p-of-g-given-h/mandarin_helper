@@ -1,6 +1,7 @@
 import type { Extension } from "@codemirror/state";
 import { MarkdownView, Notice, Plugin, normalizePath } from "obsidian";
 import { registerDictionaryLookupCommand, triggerDictionaryLookup } from "./commands/dictionaryLookupCommand";
+import { registerGoogleTranslateCommand, triggerGoogleTranslate } from "./commands/googleTranslateCommand";
 import { make_dictionary, parseDictionaryFileJson, type DictionaryEntry, type RankingDictionary } from "./dictionary";
 import { createHanziEditorDecorationsExtension } from "./editor/hanziEditorDecorations";
 import { registerHanziRubyPostProcessor } from "./rendering/hanziRubyRenderer";
@@ -33,8 +34,12 @@ export default class MandarinHelperPlugin extends Plugin {
 		this.syncEditorExtensions();
 		this.registerEditorExtension(this.editorExtensions);
 		registerDictionaryLookupCommand(this);
+		registerGoogleTranslateCommand(this);
 		this.addRibbonIcon("book-a", "Dictionary lookup", () => {
 			triggerDictionaryLookup(this);
+		});
+		this.addRibbonIcon("book-type", "Translate to simplified Chinese", () => {
+			triggerGoogleTranslate(this);
 		});
 		this.addSettingTab(new MandarinHelperSettingTab(this.app, this));
 		registerHanziRubyPostProcessor(this, () => this.getDisplayOptions());
